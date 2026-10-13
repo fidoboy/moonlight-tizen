@@ -1,0 +1,125 @@
+name: Publish Moonlight Tizen 1.18.0 AC-3 experimental release
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/publish-ac3-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    # This workflow is intentionally one-shot: only the explicitly marked commit publishes a release.
+    if: contains(github.event.head_commit.message, '[publish-release]')
+    name: Build and publish Moonlight.wgt
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout experimental source
+        uses: actions/checkout@v4
+        with:
+          ref: 8dfd3ea7b54f9f21d9e436d6dcba3caf468c7f74
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Validate startup JavaScript and locale strings
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check wasm/platform/index.js
+          node --check wasm/platform/messages.js
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          en = json.loads(Path("wasm/static/locales/en-US.json").read_text(encoding="utf-8"))
+          es = json.loads(Path("wasm/static/locales/es-ES.json").read_text(encoding="utf-8"))
+          pt = json.loads(Path("wasm/static/locales/pt-BR.json").read_text(encoding="utf-8"))
+
+          for locale_name, locale in (("es-ES", es), ("pt-BR", pt)):
+              missing = sorted(set(en) - set(locale))
+              extra = sorted(set(locale) - set(en))
+              if missing or extra:
+                  raise SystemExit(
+                      f"{locale_name} locale keys differ from en-US.json. "
+                      f"Missing={missing!r}; extra={extra!r}"
+                  )
+
+          required = {
+              "Audio stream:",
+              "Optical audio output",
+              "Enable optical output",
+              "Quit host app on disconnect",
+          }
+          for locale_name, locale in (("en-US", en), ("es-ES", es), ("pt-BR", pt)):
+              missing = sorted(required - set(locale))
+              if missing:
+                  raise SystemExit(f"{locale_name} is missing required strings: {missing!r}")
+
+          print("JavaScript syntax, locale key parity, audio stats and optical-output strings validated.")
+          PY
+
+      - name: Build signed Tizen WGT
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: moonlight-tizen-ac3:release
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_TYPE=release
+            REPO_OWNER=${{ github.repository_owner }}
+            REPO_NAME=${{ github.event.repository.name }}
+            FORCE_GAME_MODE=false
+
+      - name: Extract Moonlight.wgt
+        shell: bash
+        run: |
+          set -euo pipefail
+          container_id="$(docker create moonlight-tizen-ac3:release)"
+          trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
+          docker cp "$container_id:/home/moonlight/Moonlight.wgt" "$RUNNER_TEMP/Moonlight.wgt"
+          test -s "$RUNNER_TEMP/Moonlight.wgt"
+          sha256sum "$RUNNER_TEMP/Moonlight.wgt"
+
+      - name: Keep a temporary build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Moonlight-Tizen-1.18.0-AC3
+          path: ${{ runner.temp }}/Moonlight.wgt
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v1.18.0-ac3-8dfd3ea
+          target_commitish: 8dfd3ea7b54f9f21d9e436d6dcba3caf468c7f74
+          name: Moonlight Tizen 1.18.0 — AC-3/E-AC-3 passthrough (experimental)
+          prerelease: true
+          draft: false
+          fail_on_unmatched_files: true
+          files: ${{ runner.temp }}/Moonlight.wgt
+          body: |
+            Experimental fork build based on Moonlight Tizen 1.18.0 for Samsung Smart TVs.
+
+            This pre-release is provided for review and testing of the changes in the `ac3-audio-passthrough` branch. It is not an official upstream release.
+
+            Included changes:
+            - Optional optical-audio output path negotiating AC-3/E-AC-3 where supported.
+            - High-quality AC-3/E-AC-3 stream handling, including the increased client audio packet buffer.
+            - Audio statistics overlay reporting the negotiated codec, channel layout and approximate bitrate.
+            - Host-app quit option after a normal disconnect.
+            - Updated translations and animated launch screen.
+
+            A compatible experimental Sunshine host build is required for AC-3/E-AC-3 streaming. The client continues to support the normal audio path.
+
+            Source branch: `ac3-audio-passthrough`
+            Source commit: 8dfd3ea7b54f9f21d9e436d6dcba3caf468c7f74
