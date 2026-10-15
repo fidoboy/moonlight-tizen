@@ -136,8 +136,8 @@ jobs:
           body: |
             # Moonlight Tizen USB v${{ env.VERSION }}
 
-            - Ensure your setup meets the necessary [requirements](https://github.com/fidoboy/moonlight-tizen/blob/master/README.md#-prerequisites) for the best possible streaming experience.
-            - Choose one of the available [installation methods](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Installation-Guide.md) and follow the instructions to install the application on your TV.
+            - Ensure your setup meets the necessary [requirements](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/README.md#-prerequisites) for the best possible streaming experience.
+            - Choose one of the available [installation methods](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Installation-Guide.md) and follow the instructions to install the application on your TV.
 
             > [!NOTE]
             > This package is based on the project's current stable release.

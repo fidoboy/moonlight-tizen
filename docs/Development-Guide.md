@@ -5,7 +5,7 @@
 Clone this repository and initialize the submodules before building:
 
 ```bash
-git clone --recurse-submodules https://github.com/fidoboy/moonlight-tizen.git
+git clone --recurse-submodules https://github.com/fidoboy/moonlight-tizen-ac3.git
 cd moonlight-tizen
 ```
 

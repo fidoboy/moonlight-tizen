@@ -102,4 +102,4 @@ jobs:
 
             Dolby optical audio requires the compatible [fidoboy/Sunshine ac3-audio branch](https://github.com/fidoboy/Sunshine/tree/ac3-audio). OPUS-only hosts remain supported.
 
-            See the [local Features Overview](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Features-Overview.md) and [Troubleshooting Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Troubleshooting-Guide.md).
+            See the [local Features Overview](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Features-Overview.md) and [Troubleshooting Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Troubleshooting-Guide.md).
