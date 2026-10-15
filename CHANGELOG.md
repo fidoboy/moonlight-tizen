@@ -2,6 +2,24 @@
 
 All notable changes to the independently maintained fidoboy Moonlight Tizen fork are recorded here.
 
+## v1.0.2 — Stream controls, gamepad identity and pairing fixes
+
+### Added
+- Added the Stream Menu, opened with the remote's Play/Pause key while streaming, with host keyboard shortcuts, performance-statistics toggle and disconnect controls.
+- Added gamepad controller-family reporting and preserved physical controller indices to improve host-side controller profile selection.
+- Added an About setting to disable automatic update checks at startup; checks remain enabled by default and can still be initiated manually.
+
+### Fixed
+- Fixed pairing requests being canceled by unrelated HTTP request timeouts and corrected host-polling lifecycle during pairing and cancellation.
+- Improved handling of Play, Pause and Play/Pause media keys while streaming.
+- Refined the update-check switch styling and navigation, shortened the Spanish Stream Menu statistics label, and localized the new menu options.
+- Removed the obsolete warning from the surround-audio channel settings.
+
+### Credits
+- **Diogo8500** — [Stream Menu (PR #177)](https://github.com/brightcraft/moonlight-tizen/pull/177), [pairing cancellation fix (PR #179)](https://github.com/brightcraft/moonlight-tizen/pull/179) and [host polling fix (PR #180)](https://github.com/brightcraft/moonlight-tizen/pull/180), related to [issue #176](https://github.com/brightcraft/moonlight-tizen/issues/176).
+- **principalwater** — gamepad identity and physical-index handling, based on [PR #171](https://github.com/brightcraft/moonlight-tizen/pull/171) and [issue #172](https://github.com/brightcraft/moonlight-tizen/issues/172).
+- **eduardomozart** — media-key handling for Play, Pause and Play/Pause ([commit `833becf`](https://github.com/brightcraft/moonlight-tizen/commit/833becf3408b9a7aeeea0d18d2126bf2ce522387)).
+
 ## v1.0.0 — First independent release
 
 ### Added

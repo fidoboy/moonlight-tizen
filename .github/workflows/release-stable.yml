@@ -148,13 +148,26 @@ jobs:
             dist/Moonlight.wgt
             dist/Moonlight-ForceGM.wgt
           body: |
+            This release builds on v1.0.1 with improvements to in-stream controls, gamepad identification, update preferences, and host pairing reliability. The existing optional AC-3/E-AC-3 optical-audio passthrough and OPUS compatibility remain unchanged.
+            
             ## Highlights
-            - Optional AC-3 (Dolby Digital) and E-AC-3 (Dolby Digital Plus) optical-audio passthrough for compatible TV/receiver configurations.
-            - The normal OPUS audio path remains available; hosts that only offer OPUS remain compatible.
-            - Audio statistics show the negotiated codec, channel layout, channel count and approximate bitrate.
-            - Spanish localization and additional settings, launch-screen and input refinements.
-
-            ## Dolby audio requirements
-            Dolby passthrough requires a compatible experimental host, currently [fidoboy/Sunshine on the ac3-audio branch](https://github.com/fidoboy/Sunshine/tree/ac3-audio), and a TV/receiver path that supports the selected format. AC-3 is limited to 5.1 in the current host encoder. E-AC-3 support over optical varies by TV and receiver.
-
-            Download `Moonlight.wgt` for the standard app. `Moonlight-ForceGM.wgt` is an alternate package for setups that specifically need the additional Game Mode metadata. See the [local installation guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Installation-Guide.md) and [features overview](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Features-Overview.md).
+            
+            - **New Stream Menu:** Press the remote's Play/Pause key while streaming to open an in-stream menu with shortcuts to send WIN, ALT+TAB, ALT+F4 and F11, toggle performance statistics, disconnect, or close the menu. The menu integrates with controller/remote navigation, restores streaming focus when closed, and is cleaned up when the stream ends.
+            - **Improved gamepad identification:** Reports controller-family metadata to the host and preserves physical gamepad indices. This helps compatible hosts select the appropriate controller profile automatically, rather than defaulting to Xbox emulation for every controller.
+            - **More reliable host pairing:** Fixes pairing requests being canceled by unrelated HTTP request timeouts. Host polling is now stopped and restarted correctly around pairing, including when pairing is canceled.
+            - **Optional automatic update checks:** A new setting in About lets users disable automatic update checks at startup. Checks remain enabled by default, and manual update checks are still available.
+            - **Interface and localization refinements:** Improved the styling and navigation of the update-check setting, shortened the Spanish Stream Menu statistics label to fit the menu, and localized the new menu options. Removed the obsolete warning from the surround-audio channel settings.
+            
+            ## Credits
+            
+            Thanks to the contributors whose work helped make this release possible:
+            
+            - **Diogo8500** — pairing request queuing and cancellation fix ([PR #179](https://github.com/brightcraft/moonlight-tizen/pull/179), related [issue #176](https://github.com/brightcraft/moonlight-tizen/issues/176)); host polling lifecycle fix ([PR #180](https://github.com/brightcraft/moonlight-tizen/pull/180)); and the Stream Menu ([PR #177](https://github.com/brightcraft/moonlight-tizen/pull/177)).
+            - **principalwater** — gamepad controller identity reporting and physical-index handling, based on [PR #171](https://github.com/brightcraft/moonlight-tizen/pull/171) and [issue #172](https://github.com/brightcraft/moonlight-tizen/issues/172).
+            - **eduardomozart** — improved handling of Play, Pause and Play/Pause media key events ([commit `833becf`](https://github.com/brightcraft/moonlight-tizen/commit/833becf3408b9a7aeeea0d18d2126bf2ce522387)).
+            
+            ## Downloads and installation
+            
+            Download `Moonlight.wgt` for the standard app. `Moonlight-ForceGM.wgt` is the alternative package for setups that specifically need the additional Game Mode metadata.
+            
+            See the [installation guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Installation-Guide.md) and [features overview](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Features-Overview.md) for further details.
