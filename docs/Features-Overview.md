@@ -9,7 +9,7 @@ The defining feature of this project is optional passthrough of Dolby Digital an
 - **AC-3 (Dolby Digital):** stereo or 5.1-channel compressed audio can be sent to Tizen's native EMSS audio renderer when the host negotiates AC-3 successfully.
 - **E-AC-3 (Dolby Digital Plus):** supported where the host, TV firmware, audio-output configuration and receiving equipment accept the format. E-AC-3 over optical is not guaranteed on every TV.
 - **Stereo and 5.1:** the current matching experimental Sunshine encoder supports stereo and 5.1. AC-3 is limited to 5.1. Seven-point-one selection remains available through the regular audio path when supported, but it is not part of the current Dolby encoder path.
-- **Opt-in negotiation:** enable the **Enable optical output** option to request the Dolby path. Dolby audio is used only when the host advertises and selects a supported format.
+- **Opt-in negotiation:** enable the **Enable Dolby Digital** option to request the Dolby path. Dolby audio is used only when the host advertises and selects a supported format.
 - **OPUS compatibility:** if a host only sends OPUS, does not advertise the optional Dolby extension, or does not select a Dolby format, the client continues using its normal OPUS path. Existing OPUS-only hosts do not need changes.
 - **Compatible host:** Dolby passthrough currently requires the matching experimental [fidoboy/Sunshine ac3-audio branch](https://github.com/fidoboy/Sunshine/tree/ac3-audio). The ordinary client audio path remains available when that host functionality is absent.
 
