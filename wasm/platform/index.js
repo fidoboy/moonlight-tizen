@@ -2065,7 +2065,7 @@ function checkVersionUpdate(currentVersion, latestVersion) {
 // Extract only the release notes section from the released update
 function extractReleaseNotes(releaseNotes) {
   // Support both upstream "What's Changed" notes and this project's "Highlights" section
-  const match = releaseNotes.match(/## (?:What's Changed:?|Highlights)\r?\n\r?\n([\s\S]+?)(?=\r?\n\r?\n(?:## |\*\*Full Changelog\*\*)|$)/);
+  const match = releaseNotes.match(/## (?:What's Changed:?|Highlights)\r?\n+([\s\S]+?)(?=\r?\n+## |\r?\n+\*\*Full Changelog\*\*|$)/);
   // Return null if release notes section is not found or does not match expected format
   if (!match) {
     return null;
