@@ -8,7 +8,7 @@ Yes. The Dolby extension is optional. If the host does not advertise or select A
 
 You need all of the following:
 
-- This project with **Enable optical output** enabled.
+- This project with **Enable Dolby Digital** enabled.
 - A matching Sunshine build with the `ac3-audio` implementation and an available Dolby encoder.
 - A TV that can pass the selected Dolby bitstream over its optical connection.
 - TV sound settings configured for a compatible passthrough/bitstream mode.
@@ -16,7 +16,7 @@ You need all of the following:
 
 For the initial setup, choose 5.1 and check the **Audio stream** line in the statistics overlay (`Ctrl+Alt+Shift+S`).
 
-## Does enabling optical output force Dolby on every host?
+## Does enabling Dolby Digital force Dolby on every host?
 
 No. The option requests the optional codec during negotiation. If Dolby is not offered or the host does not select it, Moonlight uses OPUS. The active codec shown by the statistics overlay is the reliable way to check what the session is receiving.
 
