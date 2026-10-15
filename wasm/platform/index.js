@@ -78,7 +78,6 @@ var isGamepadActive = false; // Flag indicating whether the gamepad input is act
 var isClickPrevented = false; // Flag indicating whether the click event should be prevented, initial value is false
 var resFpsWarning = false; // Flag indicating whether the video resolution and frame rate warning message has shown, initial value is false
 var bitrateWarning = false; // Flag indicating whether the video bitrate warning message has shown, initial value is false
-var audioWarning = false; // Flag indicating whether the audio configuration warning message has shown, initial value is false
 var codecWarning = false; // Flag indicating whether the video codec warning message has shown, initial value is false
 var repeatAction = null; // Flag indicating whether the repeat action is set, initial value is null
 var lastInvokeTime = 0; // Flag indicating the last invoke time, initial value is 0
@@ -226,6 +225,7 @@ function attachListeners() {
   $('#performanceStatsSwitch').on('click', savePerformanceStats);
   $('#navigationGuideBtn').on('click', navigationGuideDialog);
   $('#checkUpdatesBtn').on('click', checkForAppUpdates);
+  $('#automaticUpdateChecksSwitch').on('click', saveAutomaticUpdateChecks);
   $('#restartAppBtn').on('click', restartAppDialog);
 
   const registerMenu = (elementId, view) => {
@@ -2206,6 +2206,14 @@ function updateAppDialog(latestVersion, releaseNotes) {
   Navigation.push(Views.UpdateMoonlightDialog);
 }
 
+function saveAutomaticUpdateChecks() {
+  setTimeout(() => {
+    const enabled = $('#automaticUpdateChecksSwitch').parent().hasClass('is-checked');
+    console.log('%c[index.js, saveAutomaticUpdateChecks]', 'color: green;', 'Saving automatic update checks state: ' + enabled);
+    storeData('automaticUpdateChecks', enabled, null);
+  }, 100);
+}
+
 // Check for updates when the Check for Updates button is pressed
 function checkForAppUpdates() {
   console.log('%c[index.js, checkForAppUpdates]', 'color: green;', 'Checking for new application updates...');
@@ -2232,60 +2240,70 @@ function checkForAppUpdates() {
 
 // Automatically perform a scheduled app update check at startup if the interval condition is met and notify the user
 function checkForAppUpdatesAtStartup() {
-  // Fetch the current timestamp and stored version info
-  getData(UPDATE_TIMESTAMP, function(tResult) {
-    var lastChecked = tResult[UPDATE_TIMESTAMP];
-    var currentTime = Date.now();
-    // Log the last auto-check timestamp if it exists
-    if (lastChecked) {
-      console.log('%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', `Last auto-check performed: ${formatUpdateTimestamp(lastChecked)}`);
+  getData('automaticUpdateChecks', function(settings) {
+    const storedValue = settings.automaticUpdateChecks;
+    const enabled = storedValue == null || storedValue === true ||
+      storedValue === 'true' || storedValue === 1;
+    if (!enabled) {
+      console.log('%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', 'Automatic update checks are disabled; skipping startup check.');
+      return;
     }
-    // Check if enough time has passed since the last update check
-    if (!lastChecked || currentTime - lastChecked > UPDATE_INTERVAL) {
-      console.log('%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', 'Performing auto-check for new application updates...');
-      // Fetch the latest release data from the GitHub API
-      fetchLatestRelease().then(({ latestVersion }) => {
-        setTimeout(() => {
-          // Check if a new version update is available
-          if (checkVersionUpdate(appInfo.version, latestVersion)) {
-            // Show snackbar message with new version to inform user to update the app
-            snackbarLogLong('Version %1$s is now available! Check out the latest features & improvements.', latestVersion);
-            // Create and display the Update App button with tooltip and additional layout spacer
-            updateAppButton(latestVersion);
-          }
-        }, 100);
-        // Save the fetched version as the last known update version
-        storeData(UPDATE_VERSION, latestVersion);
-      }).catch(error => {
-        console.error('%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', 'Error: Failed to fetch the release data!', error);
-        snackbarLogLong('Cannot automatically check for updates at this time!');
-      });
-      // Save the current time as the last update check timestamp
-      storeData(UPDATE_TIMESTAMP, currentTime);
-      console.log('%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', `New auto-check timestamp stored: ${formatUpdateTimestamp(currentTime)}`);
-    } else {
-      var timeLeft = UPDATE_INTERVAL - (currentTime - lastChecked);
-      var hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
-      var minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-      console.log(
-        '%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', 
-        'Auto-update check skipped as the last one was within the past 24 hours. ' + 
-        `Next auto-check will occur in ${hoursLeft} hour${hoursLeft !== 1 ? 's' : ''} and ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}.`
-      );
-      // Still show the Update App button if a newer version was previously cached
-      getData(UPDATE_VERSION, function(vResult) {
-        var cachedVersion = vResult[UPDATE_VERSION];
-        // Check if the cached version is newer than the current app version
-        if (cachedVersion !== undefined && checkVersionUpdate(appInfo.version, cachedVersion)) {
+
+    // Fetch the current timestamp and stored version info
+    getData(UPDATE_TIMESTAMP, function(tResult) {
+      var lastChecked = tResult[UPDATE_TIMESTAMP];
+      var currentTime = Date.now();
+      // Log the last auto-check timestamp if it exists
+      if (lastChecked) {
+        console.log('%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', `Last auto-check performed: ${formatUpdateTimestamp(lastChecked)}`);
+      }
+      // Check if enough time has passed since the last update check
+      if (!lastChecked || currentTime - lastChecked > UPDATE_INTERVAL) {
+        console.log('%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', 'Performing auto-check for new application updates...');
+        // Fetch the latest release data from the GitHub API
+        fetchLatestRelease().then(({ latestVersion }) => {
           setTimeout(() => {
-            // Show snackbar message with cached version to inform user to update the app
-            snackbarLogLong('Version %1$s is now available! Check out the latest features & improvements.', cachedVersion);
-            // Create and display the cached Update App button with tooltip and additional layout spacer
-            updateAppButton(cachedVersion);
+            // Check if a new version update is available
+            if (checkVersionUpdate(appInfo.version, latestVersion)) {
+              // Show snackbar message with new version to inform user to update the app
+              snackbarLogLong('Version %1$s is now available! Check out the latest features & improvements.', latestVersion);
+              // Create and display the Update App button with tooltip and additional layout spacer
+              updateAppButton(latestVersion);
+            }
           }, 100);
-        }
-      });
-    }
+          // Save the fetched version as the last known update version
+          storeData(UPDATE_VERSION, latestVersion);
+        }).catch(error => {
+          console.error('%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', 'Error: Failed to fetch the release data!', error);
+          snackbarLogLong('Cannot automatically check for updates at this time!');
+        });
+        // Save the current time as the last update check timestamp
+        storeData(UPDATE_TIMESTAMP, currentTime);
+        console.log('%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', `New auto-check timestamp stored: ${formatUpdateTimestamp(currentTime)}`);
+      } else {
+        var timeLeft = UPDATE_INTERVAL - (currentTime - lastChecked);
+        var hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+        var minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        console.log(
+          '%c[index.js, checkForAppUpdatesAtStartup]', 'color: green;', 
+          'Auto-update check skipped as the last one was within the past 24 hours. ' + 
+          `Next auto-check will occur in ${hoursLeft} hour${hoursLeft !== 1 ? 's' : ''} and ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}.`
+        );
+        // Still show the Update App button if a newer version was previously cached
+        getData(UPDATE_VERSION, function(vResult) {
+          var cachedVersion = vResult[UPDATE_VERSION];
+          // Check if the cached version is newer than the current app version
+          if (cachedVersion !== undefined && checkVersionUpdate(appInfo.version, cachedVersion)) {
+            setTimeout(() => {
+              // Show snackbar message with cached version to inform user to update the app
+              snackbarLogLong('Version %1$s is now available! Check out the latest features & improvements.', cachedVersion);
+              // Create and display the cached Update App button with tooltip and additional layout spacer
+              updateAppButton(cachedVersion);
+            }, 100);
+          }
+        });
+      }
+    });
   });
 }
 
@@ -3747,7 +3765,6 @@ function saveAudioConfiguration() {
   setAudioSelectorValue('#selectAudio', '.audioConfigMenu', chosenAudioConfig);
   console.log('%c[index.js, saveAudioConfiguration]', 'color: green;', 'Saving audioConfig value: ' + chosenAudioConfig);
   storeData('audioConfig', chosenAudioConfig, null);
-  warnAudioConfiguration();
 }
 
 // Update a backend/layout selector by its stable value, using the localized menu label.
@@ -3813,20 +3830,6 @@ function saveAc3AudioMode() {
   }, 100);
 }
 
-function warnAudioConfiguration() {
-  var chosenAudioConfig = $('#selectAudio').data('value');
-
-  // Audio configuration warning
-  if (!audioWarning && (chosenAudioConfig === '71Surround' || chosenAudioConfig === '51Surround')) {
-    // Warn only if audio configuration is selected to 5.1 or 7.1 Surround
-    snackbarLogLong('Warning: Surround Sound (5.1/7.1) may not be supported by your TV and is not guaranteed to work due to platform limitations!');
-    // Set flag for audio configuration warning
-    audioWarning = true;
-  } else if (audioWarning && (chosenAudioConfig === 'Stereo')) {
-    // Reset the flag for audio configuration warning if the condition goes back to normal (Stereo)
-    audioWarning = false;
-  }
-}
 
 function saveAudioSync() {
   setTimeout(() => {
@@ -4187,6 +4190,10 @@ function restoreDefaultsSettingsValues() {
   const defaultPerformanceStats = false;
   document.querySelector('#performanceStatsBtn').MaterialSwitch.off();
   storeData('performanceStats', defaultPerformanceStats, null);
+
+  const defaultAutomaticUpdateChecks = true;
+  document.querySelector('#automaticUpdateChecksBtn').MaterialSwitch.on();
+  storeData('automaticUpdateChecks', defaultAutomaticUpdateChecks, null);
 }
 
 function initSamsungKeys() {
@@ -4270,6 +4277,18 @@ function loadUserData() {
 }
 
 function loadUserDataCb() {
+  console.log('%c[index.js, loadUserDataCb]', 'color: green;', 'Load stored automatic update check preference.');
+  getData('automaticUpdateChecks', function(previousValue) {
+    const storedValue = previousValue.automaticUpdateChecks;
+    const enabled = storedValue == null || storedValue === true ||
+      storedValue === 'true' || storedValue === 1;
+    if (enabled) {
+      document.querySelector('#automaticUpdateChecksBtn').MaterialSwitch.on();
+    } else {
+      document.querySelector('#automaticUpdateChecksBtn').MaterialSwitch.off();
+    }
+  });
+
   console.log('%c[index.js, loadUserDataCb]', 'color: green;', 'Load stored resolution preferences.');
   getData('resolution', function(previousValue) {
     if (previousValue.resolution != null) {
