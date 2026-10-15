@@ -49,9 +49,6 @@ var pairingCert; // Loads the generated certificate
 var myUniqueid;
 var api; // The `api` should only be set if we're in a host-specific screen, on the initial screen it should always be null
 var isInGame = false; // Flag indicating whether the game has started, initial value is false
-var _nativeHomeKeyRegistered = false;
-var _nativeHomeKeyName = null;
-var _nativeHomeKeyCode = null;
 
 // Best-effort keyboard capture for the Windows/Meta key. If Tizen's Web Runtime dispatches the
 // event to the app, suppress its local browser default while allowing it to bubble to the WASM
@@ -74,83 +71,6 @@ function preventNativeMetaKeyDefault(event) {
 
 document.addEventListener('keydown', preventNativeMetaKeyDefault, true);
 document.addEventListener('keyup', preventNativeMetaKeyDefault, true);
-
-// Temporarily suppress the TV's native Home action while streaming. The Gamepad API
-// continues to report the Xbox Guide button independently, so gamepad.cpp can still
-// forward SPECIAL_FLAG to the host. This may also suppress a TV-remote Home key during
-// the stream because Tizen does not expose the source of a registered Home key event.
-function setNativeHomeKeyInterception(enabled) {
-  const inputDevice = window.tizen && window.tizen.tvinputdevice;
-  if (!inputDevice) {
-    console.warn('%c[index.js, setNativeHomeKeyInterception]', 'color: gray;', 'TV input device API is unavailable.');
-    return;
-  }
-
-  if (enabled) {
-    if (_nativeHomeKeyRegistered) {
-      return;
-    }
-
-    try {
-      const supportedKeys = inputDevice.getSupportedKeys();
-      const homeKey = supportedKeys.find(function(key) {
-        return String(key.name).toLowerCase() === 'home';
-      });
-
-      if (!homeKey) {
-        console.warn('%c[index.js, setNativeHomeKeyInterception]', 'color: gray;', 'The TV does not expose a registerable Home key; native Home interception was not enabled.');
-        return;
-      }
-
-      inputDevice.registerKey(homeKey.name);
-      _nativeHomeKeyName = homeKey.name;
-      _nativeHomeKeyCode = homeKey.code;
-      _nativeHomeKeyRegistered = true;
-      console.log('%c[index.js, setNativeHomeKeyInterception]', 'color: green;', 'Registered the Home key for the active streaming session.');
-    } catch (error) {
-      console.warn('%c[index.js, setNativeHomeKeyInterception]', 'color: gray;', 'Could not register the Home key:', error);
-    }
-  } else {
-    if (!_nativeHomeKeyRegistered) {
-      return;
-    }
-
-    try {
-      inputDevice.unregisterKey(_nativeHomeKeyName);
-      console.log('%c[index.js, setNativeHomeKeyInterception]', 'color: green;', 'Unregistered the Home key after streaming.');
-    } catch (error) {
-      console.warn('%c[index.js, setNativeHomeKeyInterception]', 'color: gray;', 'Could not unregister the Home key:', error);
-    } finally {
-      _nativeHomeKeyRegistered = false;
-      _nativeHomeKeyName = null;
-      _nativeHomeKeyCode = null;
-    }
-  }
-}
-
-// If Tizen delivers the registered Home key as a DOM event, cancel its default action.
-// The game's Gamepad API polling remains untouched, preserving Xbox Guide passthrough.
-function interceptNativeHomeKeyEvent(event) {
-  if (!isInGame || !_nativeHomeKeyRegistered || !event) {
-    return;
-  }
-
-  const isHomeKey = event.key === 'Home' ||
-    event.key === _nativeHomeKeyName ||
-    (_nativeHomeKeyCode != null && event.keyCode === _nativeHomeKeyCode);
-
-  if (!isHomeKey) {
-    return;
-  }
-
-  if (event.cancelable) {
-    event.preventDefault();
-  }
-  event.stopPropagation();
-  if (typeof event.stopImmediatePropagation === 'function') {
-    event.stopImmediatePropagation();
-  }
-}
 
 var isDialogOpen = false; // Flag indicating whether the dialog is open, initial value is false
 var isPairingInProgress = false; // Flag indicating whether a pairing process is in progress, initial value is false
@@ -2716,7 +2636,6 @@ function showAppsMode() {
   $('#wasm_module').css('display', 'none');
 
   isInGame = false;
-  setNativeHomeKeyInterception(false);
   // We want to eventually poll on the app screen, but we can't now because
   // it slows down box art loading and we don't update the UI live anyway.
   stopPollingHosts();
@@ -3064,7 +2983,6 @@ function showStreamMode() {
   $('#loadingSpinner').css('display', 'inline-block');
 
   isInGame = true;
-  setNativeHomeKeyInterception(true);
   fullscreenWasmModule();
   handleOnScreenOverlays();
   Navigation.stop();
@@ -3338,7 +3256,6 @@ function startGame(host, appID) {
 // Stop the running app title, refresh the server info, and then return to Apps grid
 function stopGame(host, callbackFunction) {
   isInGame = false;
-  setNativeHomeKeyInterception(false);
 
   if (!host.paired) {
     return;
@@ -4486,7 +4403,6 @@ function initSpecialKeys() {
 
   // Capture media keys before the streaming session and suppress the TV's default action.
   ['keydown', 'keyup'].forEach(function(eventType) {
-    window.addEventListener(eventType, interceptNativeHomeKeyEvent, true);
     window.addEventListener(eventType, function(e) {
       if (typeof tvKey === 'undefined' || !isInGame) return;
       if (e.keyCode === tvKey.KEY_PLAY_PAUSE ||
