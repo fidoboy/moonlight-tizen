@@ -1,7 +1,12 @@
 #include "moonlight_wasm.hpp"
 
 #include <iostream>
+#include <algorithm>
 #include <array>
+#include <cctype>
+#include <cstdint>
+#include <string>
+#include <vector>
 #include <utility>
 #include <sstream>
 #include <chrono>
@@ -11,6 +16,113 @@
 
 #include <Limelight.h>
 #include <emscripten/emscripten.h>
+
+namespace gamepad_identity {
+constexpr unsigned kMaxControllers = 16;
+
+inline uint8_t controllerType(std::string id) {
+  std::transform(id.begin(), id.end(), id.begin(), [](unsigned char c) {
+    return static_cast<char>(std::tolower(c));
+  });
+  const auto contains = [&id](const char* value) {
+    return id.find(value) != std::string::npos;
+  };
+  if (contains("vendor: 054c") || contains("vendor:054c") || id.find("054c-") == 0 ||
+      contains("dualsense") || contains("dualshock") || contains("playstation") ||
+      contains("sony interactive entertainment") || contains("sony computer entertainment")) {
+    return LI_CTYPE_PS;
+  }
+  if (contains("vendor: 045e") || contains("vendor:045e") || id.find("045e-") == 0 || contains("xbox")) {
+    return LI_CTYPE_XBOX;
+  }
+  if (contains("vendor: 057e") || contains("vendor:057e") || id.find("057e-") == 0 ||
+      contains("nintendo") || contains("joy-con")) {
+    return LI_CTYPE_NINTENDO;
+  }
+  return LI_CTYPE_UNKNOWN;
+}
+
+inline uint32_t supportedButtons(int count, bool flipAB = false, bool flipXY = false) {
+  static constexpr uint32_t buttons[] = {
+    A_FLAG, B_FLAG, X_FLAG, Y_FLAG, LB_FLAG, RB_FLAG, 0, 0,
+    BACK_FLAG, PLAY_FLAG, LS_CLK_FLAG, RS_CLK_FLAG,
+    UP_FLAG, DOWN_FLAG, LEFT_FLAG, RIGHT_FLAG, SPECIAL_FLAG
+  };
+  uint32_t flags = 0;
+  for (int i = 0; i < count && i < 17; ++i) {
+    auto flag = buttons[i];
+    if (flipAB && i < 2) {
+      flag = buttons[1 - i];
+    } else if (flipXY && i >= 2 && i < 4) {
+      flag = buttons[5 - i];
+    }
+    flags |= flag;
+  }
+  return flags;
+}
+
+struct Sample {
+  bool connected = false;
+  double timestamp = 0;
+  std::string id;
+};
+
+struct Changes {
+  uint16_t mask = 0;
+  std::vector<unsigned> removed;
+  std::vector<unsigned> arrived;
+};
+
+// Browser arrays contain null slots and Tizen placeholder devices. Preserve
+// physical indices, and announce each real device before its first input packet.
+class Tracker {
+ public:
+  Changes update(const std::array<Sample, kMaxControllers>& samples) {
+    Changes changes;
+    for (unsigned i = 0; i < kMaxControllers; ++i) {
+      const auto& sample = samples[i];
+      auto& state = states_[i];
+      const bool sameDevice = state.id == sample.id;
+      const bool real = sample.connected &&
+                        (sample.timestamp != 0 || (sameDevice && state.seenTimestamp));
+      if (state.announced && (!real || !sameDevice)) {
+        changes.removed.push_back(i);
+        state.announced = false;
+      }
+      if (!real) {
+        state = {};
+        continue;
+      }
+      state.id = sample.id;
+      state.seenTimestamp = true;
+      changes.mask |= static_cast<uint16_t>(1u << i);
+      if (!state.announced) {
+        changes.arrived.push_back(i);
+      }
+    }
+    return changes;
+  }
+
+  void announced(unsigned i) { states_.at(i).announced = true; }
+  bool isAnnounced(unsigned i) const { return states_.at(i).announced; }
+  // Announcements are scoped to a stream. Retain timestamp knowledge like the
+  // browser-side mask until a disconnect or replacement invalidates the slot.
+  void reset() {
+    for (auto& state : states_) {
+      state.announced = false;
+    }
+  }
+
+ private:
+  struct State {
+    bool seenTimestamp = false;
+    bool announced = false;
+    std::string id;
+  };
+  std::array<State, kMaxControllers> states_{};
+};
+}  // namespace gamepad_identity
+
 
 // Bitmask for gamepad combo buttons to stop the streaming session
 const short STOP_STREAM_BUTTONS = BACK_FLAG | PLAY_FLAG | LB_FLAG | RB_FLAG;
@@ -51,16 +163,7 @@ enum GamepadAxis {
   RightY = 3,
 };
 
-// Function to create a mask for active gamepads
-static short GetActiveGamepadMask(int numGamepads) {
-  short result = 0;
-  
-  for (int i = 0; i < numGamepads; ++i) {
-    result |= (1 << i);
-  }
-  
-  return result;
-}
+static gamepad_identity::Tracker controllerTracker;
 
 // Function to map gamepad buttons to flags
 static short GetButtonFlags(const EmscriptenGamepadEvent& gamepad) {
@@ -143,6 +246,7 @@ static short GetButtonFlags(const EmscriptenGamepadEvent& gamepad) {
 
 // Function to handle the gamepad input state
 void MoonlightInstance::HandleGamepadInputState(bool rumbleFeedback, bool mouseEmulation, bool flipABfaceButtons, bool flipXYfaceButtons) {
+  controllerTracker.reset();
   rumbleFeedbackSwitch = rumbleFeedback;
   mouseEmulationSwitch = mouseEmulation;
   flipABfaceButtonsSwitch = flipABfaceButtons;
@@ -162,41 +266,46 @@ void MoonlightInstance::PollGamepads() {
     return;
   }
 
-  // Create a mask for active gamepads
-  const auto activeGamepadMask = GetActiveGamepadMask(numGamepads);
-
-  // Prevent repeated trigger while the button combo is held down
+  std::array<EmscriptenGamepadEvent, gamepad_identity::kMaxControllers> events{};
+  std::array<gamepad_identity::Sample, gamepad_identity::kMaxControllers> samples{};
+  const auto limit = std::min<int>(numGamepads, gamepad_identity::kMaxControllers);
+  for (int i = 0; i < limit; ++i) {
+    if (emscripten_get_gamepad_status(i, &events[i]) == EMSCRIPTEN_RESULT_SUCCESS) {
+      samples[i] = {events[i].connected != 0, events[i].timestamp, events[i].id};
+    }
+  }
+  const auto changes = controllerTracker.update(samples);
+  const auto activeGamepadMask = changes.mask;
+  for (const auto i : changes.removed) {
+    LiSendMultiControllerEvent(i, activeGamepadMask & ~(1u << i), 0, 0, 0, 0, 0, 0, 0);
+  }
+  for (const auto i : changes.arrived) {
+    const auto& gamepad = events[i];
+    const auto type = gamepad_identity::controllerType(samples[i].id);
+    const auto buttons = gamepad_identity::supportedButtons(
+        gamepad.numButtons, flipABfaceButtonsSwitch, flipXYfaceButtonsSwitch);
+    uint16_t capabilities = gamepad.numButtons > 7 ? LI_CCAP_ANALOG_TRIGGERS : 0;
+    // The browser Gamepad API does not expose motion, battery, RGB or touchpad
+    // data. Only advertise rumble when our existing feedback path can use it.
+    if (rumbleFeedbackSwitch && MAIN_THREAD_EM_ASM_INT({
+      var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+      var gamepad = gamepads[$0];
+      return !!(gamepad && gamepad.vibrationActuator &&
+                typeof gamepad.vibrationActuator.playEffect === 'function');
+    }, i)) {
+      capabilities |= LI_CCAP_RUMBLE;
+    }
+    if (LiSendControllerArrivalEvent(i, activeGamepadMask, type, buttons, capabilities) == 0) {
+      controllerTracker.announced(i);
+      ClLogMessage("Controller %u announced with type %u\n", i, type);
+    }
+  }
   static std::map<int, bool> comboTriggered;
-
-  // Track valid gamepads that had a non-zero timestamp at least once
-  static bool isRealGamepad[32] = { false };
-
-  // Iterate through connected gamepads and process their input
-  for (int gamepadID = 0; gamepadID < numGamepads; ++gamepadID) {
-    emscripten_sample_gamepad_data();
-    EmscriptenGamepadEvent gamepad;
-    // See logic in getConnectedGamepadMask() (utils.js)
-    // These must stay in sync!
-
-    const auto result = emscripten_get_gamepad_status(gamepadID, &gamepad);
-    if (result != EMSCRIPTEN_RESULT_SUCCESS || !gamepad.connected) {
-      // Not connected
-      if (gamepadID < 32) {
-        isRealGamepad[gamepadID] = false;
-      }
+  for (int gamepadID = 0; gamepadID < limit; ++gamepadID) {
+    if (!(activeGamepadMask & (1u << gamepadID)) || !controllerTracker.isAnnounced(gamepadID)) {
       continue;
     }
-
-    if (gamepadID < 32 && gamepad.timestamp != 0) {
-      isRealGamepad[gamepadID] = true;
-    }
-
-    if (gamepad.timestamp == 0 && (gamepadID >= 32 || !isRealGamepad[gamepadID])) {
-      // On some platforms, Tizen returns "connected" gamepads that really 
-      // aren't, so timestamp stays at zero. To work around this, we'll only
-      // count gamepads that have a non-zero timestamp in our controller index.
-      continue;
-    }
+    const auto& gamepad = events[gamepadID];
 
     // Process input for active gamepad
     const auto buttonFlags = GetButtonFlags(gamepad);
