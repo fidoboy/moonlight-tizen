@@ -1,0 +1,46 @@
+# Quick Start Guide
+
+This guide covers the shortest path from installation to a working stream on a Samsung Smart TV.
+
+## 1. Check the setup
+
+You will need:
+
+- A Samsung Smart TV running Tizen 5.5 or newer.
+- A PC running Sunshine or another compatible GameStream host.
+- A hardware-encoding-capable GPU on the host.
+- A stable network connection between the TV and PC. Ethernet for the host and a reliable 5 GHz Wi-Fi or Ethernet connection for the TV are good starting points.
+- A compatible gamepad if you intend to play games with a controller.
+
+See [Prerequisites in the README](../README.md#-prerequisites) for more details.
+
+## 2. Install the client
+
+Download the standard `Moonlight.wgt` package from the [Releases page](https://github.com/fidoboy/moonlight-tizen/releases). Select the ForceGM package only when you specifically need the alternative Game Mode metadata.
+
+Follow the [Installation Guide](Installation-Guide.md) for Apps2Samsung, Tizen Studio or another supported installation method.
+
+## 3. Configure the host and pair
+
+1. Install and start Sunshine on the host PC.
+2. Make sure the PC and TV can communicate over the same network and that the host firewall permits the streaming connections.
+3. Launch Moonlight on the TV and select the host when it appears.
+4. Moonlight displays a PIN. Open the Sunshine Web UI on the PC, enter that PIN in the pairing section and confirm.
+5. Select a game or desktop entry to start streaming.
+
+For a new setup, begin with conservative default resolution, frame rate and bitrate settings. Increase them after confirming that the stream is stable.
+
+## 4. Enable Dolby optical output (optional)
+
+Dolby passthrough requires the matching experimental [Sunshine ac3-audio build](https://github.com/fidoboy/Sunshine/tree/ac3-audio), a compatible TV audio path, and a receiver or sound system that supports the format.
+
+1. Connect the TV's optical output to the receiver or sound system.
+2. In the TV's sound settings, choose an output mode that passes through a supported Dolby bitstream rather than forcing PCM stereo. The exact labels vary by model.
+3. In Moonlight Settings, enable **Enable optical output** and select Stereo or 5.1.
+4. Start a stream and open the performance overlay with **Ctrl+Alt+Shift+S**. Check whether the active audio line reports OPUS, AC-3 or E-AC-3 and the expected channel layout.
+
+If the host only offers OPUS, the stream continues to use OPUS. An enabled client switch alone cannot make an OPUS-only host send Dolby audio.
+
+## 5. Tune the stream
+
+Once the first stream is working, adjust resolution, frame rate, bitrate, video codec and audio settings to match the TV and network capabilities. See [Features Overview](Features-Overview.md) and the [FAQ](Frequently-Asked-Questions.md) for details.

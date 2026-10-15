@@ -1,8 +1,24 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to the independently maintained fidoboy Moonlight Tizen fork are recorded here.
 
-## v1.18.0
+## v1.0.0 — First independent release
+
+### Added
+- Optional AC-3 (Dolby Digital) and E-AC-3 (Dolby Digital Plus) passthrough for compatible Samsung TV optical-audio setups.
+- Explicit optional codec negotiation with the matching experimental Sunshine implementation, with OPUS fallback for hosts that do not select a Dolby format.
+- Audio statistics for negotiated codec, channel layout, channel count and approximate receive bitrate.
+- Spanish localization (`es-ES`).
+- Optional request to quit the host application after normal disconnection.
+- Animated native Tizen launch screen and startup behavior refinements.
+- Settings navigation, disabled-state and input handling refinements.
+- Initial independent release/versioning series, starting at 1.0.0.
+
+## Inherited base-client history
+
+The entries below document the historical Brightcraft base-client releases from which this fork was created. Their version numbers belong to that base project and are not releases in the independent fidoboy version series.
+
+### Base client v1.18.0
 
 ### Added
 - Added automatic selection of the last opened host and app when navigating between views
@@ -21,7 +37,7 @@ All notable changes to this project will be documented in this file.
 - Fixed Docker image tagging in release workflows for forks with uppercase repository names
 - Fixed a startup crash when checking for cached app updates with an invalid or missing version
 
-## v1.17.2
+### Base client v1.17.2
 
 ### Added
 - Added ForceGM variant detection to the System Info panel for easier identification
@@ -33,7 +49,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed a security vulnerability that allowed untrusted host metadata to be executed within the application
 
-## v1.17.1
+### Base client v1.17.1
 
 ### Added
 - Reintroduced i18n workflow to synchronize locale files from the source of truth
@@ -50,7 +66,7 @@ All notable changes to this project will be documented in this file.
 - Fixed the 'Update App' button not being displayed after manually checking for updates
 - Fixed an issue where rapid or multiple clicks on a host could trigger concurrent executions
 
-## v1.17.0
+### Base client v1.17.0
 
 ### Added
 - Added an intermediate hamburger menu highlight when navigating up from a host card
@@ -68,7 +84,7 @@ All notable changes to this project will be documented in this file.
 - Fixed zero MAC addresses being stored for unpaired hosts causing invalid Wake-on-LAN requests
 - Fixed Wake-on-LAN failing to send magic packets in some cases due to a socket initialization error
 
-## v1.16.1
+### Base client v1.16.1
 
 ### Changed
 - Improved host polling and subnet scanning reliability and performance
@@ -84,7 +100,7 @@ All notable changes to this project will be documented in this file.
 - Fixed system info translation when Auto is set and prevented duplicate language initialization
 - Fixed toast messages being translated twice and translated strings appearing in browser console
 
-## v1.16.0
+### Base client v1.16.0
 
 ### Added
 - Introduced a new 'Audio backend' setting for switching between EMSS and Web Audio
@@ -99,7 +115,7 @@ All notable changes to this project will be documented in this file.
 - Fixed an issue causing toggle switches to revert to their previous state after being selected
 - Fixed background polling failures caused by stale host addresses and missing local IP fallback
 
-## v1.15.0
+### Base client v1.15.0
 
 ### Added
 - Added Smart Hub Preview support with app tiles, box art, and native tile ordering (Tizen 5.5–6.0)
@@ -117,7 +133,7 @@ All notable changes to this project will be documented in this file.
 - Fixed a race condition causing some box arts to fail when retrieving multiple apps at once
 - Fixed polling failures after the subnet scanner detects a known host with a changed IP address
 
-## v1.14.1
+### Base client v1.14.1
 
 ### Added
 - Added a warning message when unlocking higher frame rate options
@@ -129,7 +145,7 @@ All notable changes to this project will be documented in this file.
 - Improved the warning message when selecting 5.1 or 7.1 surround sound options
 - Optimized Docker build caching to reduce build times by reusing the Tizen SDK layer
 
-## v1.14.0
+### Base client v1.14.0
 
 ### Added
 - Added a new 'UI Settings' category for interface customization options
@@ -144,7 +160,7 @@ All notable changes to this project will be documented in this file.
 - Moved the 'Language' setting into the new 'UI Settings' category
 - Configured workflow for automated comments on issues and pull requests when opened or closed
 
-## v1.13.1
+### Base client v1.13.1
 
 ### Fixed
 - Fixed an issue where hosts could fail to recover correctly after coming back online
@@ -156,7 +172,7 @@ All notable changes to this project will be documented in this file.
 - Fixed an issue where certain gamepads could unexpectedly stop responding during streaming
 - Fixed an issue where gamepad action buttons would trigger rapidly when held down during UI navigation
 
-## v1.13.0
+### Base client v1.13.0
 
 ### Added
 - Added automatic local network host discovery using a HTTP subnet scanner
@@ -173,7 +189,7 @@ All notable changes to this project will be documented in this file.
 - Fixed pairing deadlocks causing pairing requests to remain stuck after canceling
 - Fixed network hangs that could leave the app stuck on the 'Loading Apps' screen
 
-## v1.12.1
+### Base client v1.12.1
 
 ### Changed
 - Optimized the Docker build process with persistent cache mounts for faster builds
@@ -187,7 +203,7 @@ All notable changes to this project will be documented in this file.
 - Fixed logging in the NvHTTP constructor to prevent undefined values from being printed
 - Fixed a deserialization bug where newly revived hosts failed to inherit their properties correctly
 
-## v1.12.0
+### Base client v1.12.0
 
 ### Added
 - Introduced a new 'Optimize bitrate presets' setting to calculate optimal bitrate values
@@ -205,7 +221,7 @@ All notable changes to this project will be documented in this file.
 - Fixed broken OpenSSL download URL in Emscripten SDK ports
 - Fixed an issue where multiple elements could remain focused during navigation
 
-## v1.11.1
+### Base client v1.11.1
 
 ### Added
 - Added helper functions to resolve DOM elements from various target types
@@ -222,7 +238,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed toggle switch behavior and ensured consistent handling across Tizen versions
 
-## v1.11.0
+### Base client v1.11.0
 
 ### Added
 - Added support for custom ports when connecting and pairing with a host
@@ -238,7 +254,7 @@ All notable changes to this project will be documented in this file.
 - Fixed navigation input being active during loading screens
 - Fixed a bug in the pairing process that was causing random pairing failures
 
-## v1.10.3
+### Base client v1.10.3
 
 ### Added
 - Added the Patreon platform for project support
@@ -250,7 +266,7 @@ All notable changes to this project will be documented in this file.
 - Optimized Dockerfile to cache backend build layers during frontend changes
 - Improved issue templates and included 'Discussions' link for quick interaction
 
-## v1.10.2
+### Base client v1.10.2
 
 ### Changed
 - Updated QR code in the 'Support' dialog that redirects to the correct Wiki page
@@ -258,7 +274,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed issue where SDB and other Tizen Studio tools were removed during Docker image cleanup
 
-## v1.10.1
+### Base client v1.10.1
 
 ### Changed
 - Configured workflow to mark inactive issues as stale and close them after a certain period of time
@@ -270,7 +286,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - Eliminated the need to restart Moonlight after selecting a video codec or audio configuration
 
-## v1.10.0
+### Base client v1.10.0
 
 ### Added
 - Introduced a new 'Game mode' setting that allows changing the game mode state
@@ -284,7 +300,7 @@ All notable changes to this project will be documented in this file.
 - Reorganized settings by relocating options into better structured categories
 - Reordered Tizen privileges, settings, and metadata entries in the app configuration
 
-## v1.9.2
+### Base client v1.9.2
 
 ### Added
 - Added workflow for building and publishing development releases with associated files
@@ -298,7 +314,7 @@ All notable changes to this project will be documented in this file.
 - Fixed issue where cancelling 'Exit Moonlight' dialog added double focus to host containers
 - Fixed issue with the running game card not correctly reflecting the active game session
 
-## v1.9.1
+### Base client v1.9.1
 
 ### Added
 - Added badges to settings options to indicate new, preview, or experimental features
@@ -308,7 +324,7 @@ All notable changes to this project will be documented in this file.
 - Updated the workflow file for stable releases and changed to manual trigger for the master branch
 - Improved the workflow process for USB releases, updated the release notes, and made minor fixes
 
-## v1.9.0
+### Base client v1.9.0
 
 ### Added
 - Added a new 'UI Settings' category for interface customization options
@@ -320,7 +336,7 @@ All notable changes to this project will be documented in this file.
 - Rearranged settings by moving options into more appropriate categories
 - Adjusted high-resolution scroll event scaling factor for smoother wheel input
 
-## v1.8.1
+### Base client v1.8.1
 
 ### Added
 - Added extra buffer space for IDR frames to accommodate potential SPS fixup
@@ -333,7 +349,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed an issue where server polling continued in the background during an active stream session
 
-## v1.8.0
+### Base client v1.8.0
 
 ### Added
 - Introduced a new 'Performance statistics' setting that displays performance information while streaming
@@ -344,7 +360,7 @@ All notable changes to this project will be documented in this file.
 - Handled performance stats updates and displayed metrics derived from stream performance
 - Implemented shortcut functionality to toggle performance stats via remote control, keyboard, and gamepad
 
-## v1.7.1
+### Base client v1.7.1
 
 ### Added
 - Added loading screens to 'Hosts', 'Apps', and 'Settings' views for smoother transitions
@@ -357,7 +373,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Minor bug fixes, code refactoring and general improvements
 
-## v1.7.0
+### Base client v1.7.0
 
 ### Added
 - Introduced a new 'Connection warnings' setting that disables warning messages while streaming
@@ -369,7 +385,7 @@ All notable changes to this project will be documented in this file.
 - Extended host object with additional server info and applied validation checks
 - Updated 'Host Details' dialog to display additional server info with fallback validation
 
-## v1.6.1
+### Base client v1.6.1
 
 ### Added
 - Added encryption flag to stream configurations that disables encryption support
@@ -382,7 +398,7 @@ All notable changes to this project will be documented in this file.
 - Fixed navigation view issues caused by pressing the RED key outside stream session
 - Fixed mouse wheel scroll direction issue caused by previously disabled floating menu
 
-## v1.6.0
+### Base client v1.6.0
 
 ### Added
 - Introduced a new 'Audio configuration' setting that allows selection of audio channels
@@ -394,7 +410,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Enhanced audio decoding logic to support 5.1 and 7.1 surround audio channels
 
-## v1.5.1
+### Base client v1.5.1
 
 ### Added
 - Added issue templates for bug report and feature request with selection options
@@ -410,7 +426,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Minor bug fixes, code refactoring and general improvements
 
-## v1.5.0
+### Base client v1.5.0
 
 ### Added
 - Introduced a new 'Color range' setting that enables full color range while streaming
@@ -424,7 +440,7 @@ All notable changes to this project will be documented in this file.
 - Fixed focus issue on 'Continue' button after toggling its disabled state in the 'Add Host' dialog
 - Fixed an issue with the running game card style not being applied when navigating to the 'Apps' view
 
-## v1.4.1
+### Base client v1.4.1
 
 ### Added
 - Implemented auto-checking for new Moonlight updates at application startup
@@ -438,7 +454,7 @@ All notable changes to this project will be documented in this file.
 ### Dependencies
 - Updated 'tizen-studio' tool from v5.6 to v6.1
 
-## v1.4.0
+### Base client v1.4.0
 
 ### Added
 - Added a new 'Audio Settings' category which will contain audio settings
@@ -452,7 +468,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed validation of non-pinned TLS trusted certificates
 
-## v1.3.1
+### Base client v1.3.1
 
 ### Changed
 - Improved manual release update checking and eliminated redundant code
@@ -464,7 +480,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed incorrect conditions causing toggle switches to misinterpret their default state
 
-## v1.3.0
+### Base client v1.3.0
 
 ### Added
 - Added a new 'System Update' icon for the 'Check for Updates' button
@@ -476,7 +492,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Minor improvements, code refactoring, and rearrangement across the application
 
-## v1.2.20
+### Base client v1.2.20
 
 ### Added
 - Added warning messages for resolution, frame rate, bitrate, and codec selection
@@ -489,7 +505,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed an issue where the bitrate slider was ignoring decimal values due to incorrect parsing
 
-## v1.2.19
+### Base client v1.2.19
 
 ### Added
 - Added more system details and improved structure in the 'System Info' placeholder
@@ -503,7 +519,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Minor bug fixes, code refactoring and general improvements
 
-## v1.2.18
+### Base client v1.2.18
 
 ### Added
 - Added a new 'Tizen' metadata: 'Floating Navigation' to disable the floating menu in the app
@@ -516,7 +532,7 @@ All notable changes to this project will be documented in this file.
 - Fixed an issue where stream settings and parameters did not apply when resuming an app
 - Fixed an issue where repeated clicks on host and game containers caused multiple instances of streaming sessions
 
-## v1.2.17
+### Base client v1.2.17
 
 ### Added
 - Added new snackbar messages for additional cases of unexpected streaming termination
@@ -528,7 +544,7 @@ All notable changes to this project will be documented in this file.
 ### Dependencies
 - Updated 'opus' module from v1.4 `c854997` to v1.5.2 `ddbe483`
 
-## v1.2.16
+### Base client v1.2.16
 
 ### Added
 - Implemented scrolling navigation to the previous or next card in the 'Hosts' and 'Apps' views
@@ -540,7 +556,7 @@ All notable changes to this project will be documented in this file.
 - Fixed an issue where the app list was not refreshed after selecting the host container
 - Fixed an issue where the 'Quit App' dialog would appear even if no app or game was running
 
-## v1.2.15
+### Base client v1.2.15
 
 ### Added
 - Added a scrolling text animation for host and game titles when focusing on the card
@@ -554,7 +570,7 @@ All notable changes to this project will be documented in this file.
 - Fixed a scrolling issue with host and game cards due to navigation delay
 - Fixed minor navigation issues across different views to improve stability
 
-## v1.2.14
+### Base client v1.2.14
 
 ### Changed
 - Enhanced styling and visibility for the header, navigation bar, and buttons
@@ -564,7 +580,7 @@ All notable changes to this project will be documented in this file.
 - Updated the content and style of the 'Navigation Guide' dialog for better readability
 - Enhanced visibility and styling in the 'Settings' view for categories, options, menus, and icons
 
-## v1.2.13
+### Base client v1.2.13
 
 ### Added
 - Added the application logo with animation to the splash screen
@@ -581,7 +597,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed a performance issue when navigating game cards in the 'Apps' view
 
-## v1.2.12
+### Base client v1.2.12
 
 ### Added
 - Added the 'Tizen' profile: 'TV Samsung' to determine the type of device used in the application
@@ -598,7 +614,7 @@ All notable changes to this project will be documented in this file.
 - Fixed an issue during address polling when the host status is online or offline
 - Fixed a focus issue on the 'Settings' button when returning to the 'Hosts' navigation bar
 
-## v1.2.11
+### Base client v1.2.11
 
 ### Added
 - Introduced a new 'HDR mode' setting that allows HDR streaming on HDR-capable devices
@@ -610,7 +626,7 @@ All notable changes to this project will be documented in this file.
 - Improved the 'Video codec' setting to better handle codec switching during HDR state changes
 - Updated the QR code in the 'Support' dialog that redirects to the new guide
 
-## v1.2.10
+### Base client v1.2.10
 
 ### Added
 - Introduced a new 'Wake On LAN' feature for waking up the host PC
@@ -622,7 +638,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Minor bug fixes, code refactoring and general improvements
 
-## v1.2.9
+### Base client v1.2.9
 
 ### Added
 - Added a new 'Menu' icon for the 'Host Menu' button
@@ -632,7 +648,7 @@ All notable changes to this project will be documented in this file.
 - Added a new 'Refresh apps' option to the 'Host Menu' dialog to refresh apps and games
 - Added a new 'Delete PC' option to the 'Host Menu' dialog to allow removing the host PC
 
-## v1.2.8
+### Base client v1.2.8
 
 ### Added
 - Introduced a new 'Flip A/B face buttons' setting that swaps the 'A' and 'B' button mapping for the gamepad
@@ -642,7 +658,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Optimized functionality to save and load box arts to internal storage for better performance
 
-## v1.2.7
+### Base client v1.2.7
 
 ### Added
 - Added a new 'Input Settings' category which will be used to hold input settings
@@ -655,7 +671,7 @@ All notable changes to this project will be documented in this file.
 ### Dependencies
 - Updated 'material-icons' library to the latest version
 
-## v1.2.6
+### Base client v1.2.6
 
 ### Added
 - Introduced a new 'Sort apps and games' setting to change the sorting order of apps and games
@@ -667,7 +683,7 @@ All notable changes to this project will be documented in this file.
 ### Dependencies
 - Updated 'moonlight-common-c' module from `48d7f1a` to `8599b60`
 
-## v1.2.5
+### Base client v1.2.5
 
 ### Added
 - Implemented functionality to handle repeat actions and navigation delay for gamepad while in-app
@@ -682,7 +698,7 @@ All notable changes to this project will be documented in this file.
 ### Dependencies
 - Updated 'tizen-studio' tool from v5.5 to v5.6
 
-## v1.2.4
+### Base client v1.2.4
 
 ### Added
 - Added a new 'Navigation' icon for the 'Navigation Guide' button
@@ -693,7 +709,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Minor enhancements in visual stylization and general improvements
 
-## v1.2.3
+### Base client v1.2.3
 
 ### Added
 - Added a new 'Tizen' metadata: 'Game Mode' which enables the app to use game mode
@@ -706,7 +722,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed an issue with the server codec mode support value not displaying correctly
 
-## v1.2.2
+### Base client v1.2.2
 
 ### Added
 - Added a new 'Tizen' privilege: 'Media Storage' that gives access to the TV's internal storage
@@ -718,7 +734,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Refactored code for improved readability and maintainability
 
-## v1.2.1
+### Base client v1.2.1
 
 ### Added
 - Introduced a new 'Mouse Emulation' feature for gamepad input
@@ -727,7 +743,7 @@ All notable changes to this project will be documented in this file.
 - Implemented logic to handle mouse scrolls with the Right Stick
 - Implemented logic to handle mouse buttons with the Face Buttons
 
-## v1.2.0
+### Base client v1.2.0
 
 ### Added
 - Introduced 'AV1' as a new video codec option in the 'Video codec' settings
@@ -737,7 +753,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed navigation issues when switching between views
 
-## v1.1.20
+### Base client v1.1.20
 
 ### Added
 - Added a new 'Tizen' metadata: 'Voice Guide' which disables the voice guide in the app
@@ -748,7 +764,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Refactored code for improved structure and readability
 
-## v1.1.19
+### Base client v1.1.19
 
 ### Added
 - Added a new 'Tizen' privilege: 'Fullscreen' which allows the application to use the full screen view
@@ -761,7 +777,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed a navigation issue to ensure proper bound checking for previous/next row
 
-## v1.1.18
+### Base client v1.1.18
 
 ### Added
 - Added a FUNDING file to enable project funding based on supported model platforms
@@ -774,7 +790,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed navigation issue after removing a host, preventing focus from shifting out of view
 
-## v1.1.17
+### Base client v1.1.17
 
 ### Added
 - Introduced a new 'IP address field mode' setting to change the field mode when entering the IP address
@@ -784,7 +800,7 @@ All notable changes to this project will be documented in this file.
 - Enhanced the 'Add Host' dialog to provide two different IP address fields
 - Improved navigation for the 'Add Host' dialog view to support both IP address fields
 
-## v1.1.16
+### Base client v1.1.16
 
 ### Added
 - Added additional navigation controls for special cases
@@ -794,7 +810,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Minor bug fixes and general improvements
 
-## v1.1.15
+### Base client v1.1.15
 
 ### Added
 - Added a new 'Restart' icon for the 'Restart App' button
@@ -804,7 +820,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Refactored code for improved structure and readability
 
-## v1.1.14
+### Base client v1.1.14
 
 ### Added
 - Added a new 'Drop Down' icon for multi-select buttons
@@ -814,7 +830,7 @@ All notable changes to this project will be documented in this file.
 - Changed the color of the 'Power Off' icon to white as the default
 - Enhanced the visual stylization application-wide
 
-## v1.1.13
+### Base client v1.1.13
 
 ### Added
 - Expanded settings: Reintroduced '90 FPS' frame rate option
@@ -824,7 +840,7 @@ All notable changes to this project will be documented in this file.
 - Improved visibility and readability of tooltips
 - Improved snackbar design for enhanced user experience
 
-## v1.1.12
+### Base client v1.1.12
 
 ### Added
 - Introduced a new 'Video codec' setting that allows selection of video codec
@@ -833,7 +849,7 @@ All notable changes to this project will be documented in this file.
 - Implemented functionality for handling the 'Restart Moonlight' with confirmation dialog
 - Added a navigation view for interacting with the new 'Video codec' setting
 
-## v1.1.11
+### Base client v1.1.11
 
 ### Added
 - Added snackbar notification to warn user to restart app after restoring default settings
@@ -849,7 +865,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Minor bug fixes and general improvements
 
-## v1.1.10
+### Base client v1.1.10
 
 ### Added
 - Added bitrate presets for '120 FPS' frame rate option
@@ -861,7 +877,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed gamepad button mapping issue with 'X' and 'Y' buttons
 
-## v1.1.9
+### Base client v1.1.9
 
 ### Added
 - Added a new 'Power Off' icon for the 'Exit App' button
@@ -873,7 +889,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed control navigation issues in multiple views
 
-## v1.1.8
+### Base client v1.1.8
 
 ### Added
 - Introduced a new 'Restore Defaults' button in the 'Settings' navigation bar
@@ -881,7 +897,7 @@ All notable changes to this project will be documented in this file.
 - Implemented a function to reset all settings to their default values
 - Implemented functionality for handling the 'Restore Defaults' with confirmation dialog
 
-## v1.1.7
+### Base client v1.1.7
 
 ### Added
 - Added a new 'About' category that contains a 'System Info' button as a placeholder
@@ -891,7 +907,7 @@ All notable changes to this project will be documented in this file.
 - Implemented navigation to go to the previous or next category in 'Settings' view
 - Implemented functionality to handle category clicks and show the settings options in the right pane
 
-## v1.1.6
+### Base client v1.1.6
 
 ### Added
 - Introduced a new 'Settings' button and created a 'Settings' container
@@ -904,7 +920,7 @@ All notable changes to this project will be documented in this file.
 - Grouped and migrated existing settings options to the right pane of the container
 - Converted all settings using 'Material Icon Toggle' to the 'Material Switch' for improved appearance
 
-## v1.1.5
+### Base client v1.1.5
 
 ### Added
 - Introduced a new way to stop the streaming session using the RED key on the remote control
@@ -920,7 +936,7 @@ All notable changes to this project will be documented in this file.
 ### Dependencies
 - Updated 'moonlight-common-c' module from `3ed3ba6` to `48d7f1a`
 
-## v1.1.4
+### Base client v1.1.4
 
 ### Added
 - Added gamepad timestamp for accurate detection of valid gamepads
@@ -933,7 +949,7 @@ All notable changes to this project will be documented in this file.
 - Fixed header display issues during the loading of host and game views
 - Refactored code for improved structure and readability
 
-## v1.1.3
+### Base client v1.1.3
 
 ### Changed
 - Improved the header style for better appearance
@@ -944,7 +960,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - Removed unnecessary media queries from the styling
 
-## v1.1.2
+### Base client v1.1.2
 
 ### Changed
 - Changed the root directory name for the build package
@@ -957,7 +973,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed spelling errors in the code
 
-## v1.1.1
+### Base client v1.1.1
 
 ### Changed
 - Decreased the maximum bitrate slider for the bitrate menu from '150 Mbps' to '100 Mbps'
@@ -967,7 +983,7 @@ All notable changes to this project will be documented in this file.
 ### Dependencies
 - Updated 'tizen-studio' tool from v5.1 to v5.5
 
-## v1.1.0
+### Base client v1.1.0
 
 ### Changed
 - Updated stream configurations to align with the latest versions of modules
@@ -976,7 +992,7 @@ All notable changes to this project will be documented in this file.
 - Updated 'moonlight-common-c' module from `50c0a51` to `3ed3ba6`
 - Updated 'opus' module from v1.4 `82ac57d` to v1.4 `c854997`
 
-## v1.0.20
+### Base client v1.0.20
 
 ### Changed
 - Improved audio synchronization for a better streaming experience
@@ -987,7 +1003,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - Temporarily removed the '90 FPS' and '120 FPS' frame rate options due to functionality issues causing screen freezes
 
-## v1.0.19
+### Base client v1.0.19
 
 ### Added
 - Added additional TV key buttons and associated key codes
@@ -1000,7 +1016,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - Removed the sound effects to resolve a black screen issue occurring during stream startup
 
-## v1.0.18
+### Base client v1.0.18
 
 ### Added
 - Added a validation for 'IP Address' input field which allows only a maximum of 15 numerical characters
@@ -1014,7 +1030,7 @@ All notable changes to this project will be documented in this file.
 - Fixed the 'Volume UI' issue where it would not appear when changing the volume on the TV
 - Refactored code for improved structure and readability
 
-## v1.0.17
+### Base client v1.0.17
 
 ### Added
 - Added a new 'Tizen' privilege: 'IME' which allows entering characters and symbols into text field
@@ -1026,7 +1042,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed navigation blockage caused by bitrate slider sticking issue in 'Hosts' navigation bar
 
-## v1.0.16
+### Base client v1.0.16
 
 ### Added
 - Added additional app icon sizes
@@ -1038,7 +1054,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Refactored code for improved structure and readability
 
-## v1.0.15
+### Base client v1.0.15
 
 ### Added
 - Added a snackbar notification for offline hosts
@@ -1052,7 +1068,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed spelling errors in the code
 
-## v1.0.14
+### Base client v1.0.14
 
 ### Added
 - Expanded settings: Introduced '90 FPS' and '120 FPS' frame rate options
@@ -1066,7 +1082,7 @@ All notable changes to this project will be documented in this file.
 - Fixed bitrate presets for '90 FPS' and '120 FPS' frame rate options
 - Fixed the order of combination keys for both keyboard and gamepad buttons to stop streaming sessions
 
-## v1.0.13
+### Base client v1.0.13
 
 ### Changed
 - Updated all core implementation files for 'Tizen'
@@ -1074,7 +1090,7 @@ All notable changes to this project will be documented in this file.
 ### Dependencies
 - Updated 'opus' module from v1.1.3 `f6f8487` to v1.4 `82ac57d`
 
-## v1.0.12
+### Base client v1.0.12
 
 ### Added
 - Introduced a new 'Rumble Feedback' feature for gamepad input
@@ -1086,7 +1102,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - Removed the 'SLOW_AUDIO_DECODER' condition to resolve a garbled audio playback issue occurring at the beginning of the stream
 
-## v1.0.11
+### Base client v1.0.11
 
 ### Added
 - Introduced a new 'Support' button and a new 'Support' dialog
@@ -1096,7 +1112,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Minor enhancements in visual stylization application-wide
 
-## v1.0.10
+### Base client v1.0.10
 
 ### Added
 - Introduced a new button: 'Remove All Hosts' in the navigation bar
@@ -1106,7 +1122,7 @@ All notable changes to this project will be documented in this file.
 - Fixed control navigation issues in multiple views
 - Refactored code for improved structure and readability
 
-## v1.0.9
+### Base client v1.0.9
 
 ### Added
 - Introduced a new 'Pointing Device' feature for mouse input
@@ -1116,7 +1132,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Enhanced overall visual stylization application-wide
 
-## v1.0.8
+### Base client v1.0.8
 
 ### Added
 - Disabled text selection highlighting application-wide
@@ -1128,7 +1144,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Refactored code for improved structure and readability
 
-## v1.0.7
+### Base client v1.0.7
 
 ### Added
 - Enhanced card hover styles for better appearance
@@ -1139,7 +1155,7 @@ All notable changes to this project will be documented in this file.
 - Changed the text content in the 'Pairing' dialog for better clarity
 - Improved the readability of dialog texts and snack bar logs
 
-## v1.0.6
+### Base client v1.0.6
 
 ### Added
 - Enhanced button focus styles for better appearance
@@ -1150,14 +1166,14 @@ All notable changes to this project will be documented in this file.
 - Increased the width of the input field in the 'Add Host' dialog
 - Adjusted dialog buttons to increase their size
 
-## v1.0.5
+### Base client v1.0.5
 
 ### Added
 - Introduced a new 'Exit Moonlight' dialog
 - Implemented dynamic handling for 'Exit Moonlight' dialog
 - Show 'Exit Moonlight' dialog via 'Back' button on 'Hosts' view
 
-## v1.0.4
+### Base client v1.0.4
 
 ### Added
 - Added comments to improve code clarity and understanding
@@ -1167,7 +1183,7 @@ All notable changes to this project will be documented in this file.
 - Updated default bitrate setting from '10 Mbps' to '20 Mbps'
 - Reordered 'STOP_STREAM_BUTTONS_FLAGS' buttons
 
-## v1.0.3
+### Base client v1.0.3
 
 ### Added
 - Expanded settings: Introduced '480p' resolution option
@@ -1176,7 +1192,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Changed default bitrate presets and resolution settings from '720p' to '1080p'
 
-## v1.0.2
+### Base client v1.0.2
 
 ### Changed
 - Updated the 'Frame Pacing' icon for better appearance in the Settings menu
@@ -1188,14 +1204,14 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed spelling errors in the code
 
-## v1.0.1
+### Base client v1.0.1
 
 ### Changed
 - Dockerfile has been updated for the build process
 - Updated widget name and description
 - Improved app logo icons for enhanced appearance in the Smart Hub
 
-## v1.0.0
+### Base client v1.0.0
 
 ### Added
 - Expanded settings: Introduced '1440p' resolution option

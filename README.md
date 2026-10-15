@@ -3,7 +3,6 @@
 [![Release Version](https://img.shields.io/github/v/release/fidoboy/moonlight-tizen?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/fidoboy/moonlight-tizen/build-ac3-passthrough.yml?branch=ac3-audio-passthrough&style=for-the-badge&logo=docker)](https://github.com/fidoboy/moonlight-tizen/actions/workflows/build-ac3-passthrough.yml?query=branch%3Aac3-audio-passthrough)
 [![Total Downloads](https://img.shields.io/github/downloads/fidoboy/moonlight-tizen/total?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen/releases)
-[![Discord Community](https://img.shields.io/badge/Discord-Community-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/vr62ZDH236)
 
 Moonlight Tizen is a port of [Moonlight ChromeOS](https://github.com/moonlight-stream/moonlight-chrome), an open-source client for NVIDIA GameStream and [Sunshine](https://app.lizardbyte.dev/Sunshine/). It lets you stream games, applications, and your desktop from a PC to a Samsung Smart TV.
 
@@ -37,34 +36,36 @@ Before proceeding with the installation, please take a moment to ensure that you
 - **Client:** Samsung Smart TV running Tizen OS version 5.5 or newer (model year 2020 onwards).
 - **Host:** Gaming PC with a GPU capable of hardware encoding that meets the [system requirements](https://docs.lizardbyte.dev/projects/sunshine/latest/index.html#%EF%B8%8F-system-requirements) for optimal streaming performance.
 - **Network:** Mid-range or high-end wireless router with a stable wireless connection (Wi-Fi 5/6) for the TV and a wired gigabit Ethernet connection (CAT5e or better) for the host PC are strongly recommended.
-- **Input:** [Supported gamepad](https://github.com/brightcraft/moonlight-tizen/wiki/Frequently-Asked-Questions#which-gamepad-controllers-are-officially-supported-on-samsung-tvs) connected to your TV or directly connected to a nearby PC is highly recommended for the best streaming experience.
+- **Input:** [Supported gamepad](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Frequently-Asked-Questions.md#which-controllers-can-i-use) connected to your TV or directly connected to a nearby PC is highly recommended for the best streaming experience.
 
 ---
 
 ## 📦 Installation
 
-Preparing Moonlight for installation is straightforward, although the exact steps depend on your TV's Tizen version and the installation method you choose.
+Preparing Moonlight for installation is straightforward, although the exact steps depend on your TV's Tizen version and the method you choose.
 
-- Find published experimental packages in the [fork's Releases](https://github.com/fidoboy/moonlight-tizen/releases). Branch builds may also be available as artifacts from the [experimental WGT workflow](https://github.com/fidoboy/moonlight-tizen/actions/workflows/build-ac3-passthrough.yml?query=branch%3Aac3-audio-passthrough).
-- Follow the original project's [installation guide](https://github.com/brightcraft/moonlight-tizen/wiki/Installation-Guide) to choose a suitable method and install the WGT on your TV.
-- Once installed, launch **Moonlight** and start streaming your games.
-
+- Download a signed WGT from the [fork's Releases](https://github.com/fidoboy/moonlight-tizen/releases).
+- Follow the fork's [Installation Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Installation-Guide.md).
+- Use the [Quick Start Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Quick-Start-Guide.md) to pair the TV with a streaming host.
 
 ---
+
 
 ## 📚 Documentation
 
-For in-depth guides, technical support, and comprehensive documentation, please refer to the [Wiki](https://github.com/brightcraft/moonlight-tizen/wiki) or jump directly to a relevant section below:
-- 🧭 Get started with Moonlight Tizen: [Quick Start Guide](https://github.com/brightcraft/moonlight-tizen/wiki/Quick-Start-Guide)
-- 🚀 Install the app step-by-step: [Installation Guide](https://github.com/brightcraft/moonlight-tizen/wiki/Installation-Guide)
-- 🔄 Update your application version: [Updating Guide](https://github.com/brightcraft/moonlight-tizen/wiki/Updating-Guide)
-- ✨ Explore available app features: [Features Overview](https://github.com/brightcraft/moonlight-tizen/wiki/Features-Overview)
-- ❓ Common questions and tips: [Frequently Asked Questions](https://github.com/brightcraft/moonlight-tizen/wiki/Frequently-Asked-Questions)
-- ⚠️ Review limitations and notes: [Known Issues & Limitations](https://github.com/brightcraft/moonlight-tizen/wiki/Known-Issues-&-Limitations)
-- 🔧 Troubleshoot common problems: [Troubleshooting Guide](https://github.com/brightcraft/moonlight-tizen/wiki/Troubleshooting-Guide)
-- 🔮 Build instructions and log collection: [Development Guide](https://github.com/brightcraft/moonlight-tizen/wiki/Development-Guide)
+The guides are maintained in this repository and describe this fork's current behavior.
+
+- [Quick Start Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Quick-Start-Guide.md)
+- [Installation Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Installation-Guide.md)
+- [Updating Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Updating-Guide.md)
+- [Features Overview](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Features-Overview.md)
+- [Frequently Asked Questions](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Frequently-Asked-Questions.md)
+- [Known Issues and Limitations](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Known-Issues-and-Limitations.md)
+- [Troubleshooting Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Troubleshooting-Guide.md)
+- [Development Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Development-Guide.md)
 
 ---
+
 
 ## 📖 Project history and this fork
 
@@ -81,28 +82,24 @@ The fidoboy/moonlight-tizen fork is maintained independently. Its primary focus 
 
 ## 📝 Changelogs
 
-For the history of the base application, see the [upstream CHANGELOG](https://github.com/brightcraft/moonlight-tizen/blob/master/CHANGELOG.md). Fork-specific changes are described in this README, the fork's commit history, and its release notes.
+For the history of the base application, see the [upstream CHANGELOG](https://github.com/fidoboy/moonlight-tizen/blob/master/CHANGELOG.md). Fork-specific changes are described in this README, the fork's commit history, and its release notes.
 
 
 ---
 
 ## 🛠️ Contributing
 
-This fork is developed and maintained independently from the upstream Brightcraft repository. Its GitHub Issues tracker is currently disabled. For general Moonlight Tizen installation and usage guidance, consult the [upstream Wiki](https://github.com/brightcraft/moonlight-tizen/wiki) and [Discord community](https://discord.gg/vr62ZDH236).
-
-Code contributions can be proposed through pull requests against the ac3-audio-passthrough branch. Please keep changes focused, explain their purpose, and include build or device-testing results where possible. Current experimental WGT builds are linked from [GitHub Actions](https://github.com/fidoboy/moonlight-tizen/actions/workflows/build-ac3-passthrough.yml?query=branch%3Aac3-audio-passthrough).
-
+This fork is developed and maintained independently. GitHub Issues are currently disabled for this repository; for code contributions, open a pull request against `master` with a focused description and test results where possible. Consult the local [Development Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Development-Guide.md) for build and release procedures.
 
 ---
 
-## ❤️ Support the upstream project
 
-Brightcraft's original Moonlight Tizen project is supported through its Patreon page. This link supports the upstream project, not this independently maintained fork.
+## ❤️ Support and testing
 
-[![Support Brightcraft on Patreon](https://img.shields.io/badge/Support_Brightcraft_on_Patreon-F96854?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/cw/BrightCraft/membership)
-
+This fork does not currently have a separate donation program. Useful ways to support it include testing builds on different Samsung TV models, documenting audio/optical compatibility, reporting reproducible issues through pull requests, and contributing code or translations.
 
 ---
+
 
 ## ⚖️ License
 
