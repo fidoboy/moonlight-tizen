@@ -1,4 +1,4 @@
-# Moonlight Tizen — Independent Dolby Optical Audio Project
+# Moonlight Tizen with AC-3 support
 
 [![Release Version](https://img.shields.io/github/v/release/fidoboy/moonlight-tizen-ac3?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen-ac3/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/fidoboy/moonlight-tizen-ac3/build-ac3-passthrough.yml?branch=master&style=for-the-badge&logo=docker)](https://github.com/fidoboy/moonlight-tizen-ac3/actions/workflows/build-ac3-passthrough.yml?query=branch%3Amaster)
