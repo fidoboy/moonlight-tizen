@@ -67,8 +67,8 @@ jobs:
           pt = json.loads(Path("wasm/static/locales/pt-BR.json").read_text(encoding="utf-8"))
           required = {
               "Audio stream:",
-              "Optical audio output",
-              "Enable optical output",
+              "Dolby audio output",
+              "Enable Dolby Digital",
               "Quit host app on disconnect",
               "Automatically quit the running app on the host",
           }
