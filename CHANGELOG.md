@@ -16,7 +16,7 @@ All notable changes to the independently maintained fidoboy Moonlight Tizen fork
 
 ## Inherited base-client history
 
-The entries below document the historical Brightcraft base-client releases from which this fork was created. Their version numbers belong to that base project and are not releases in the independent fidoboy version series.
+The entries below document the historical [Brightcraft](https://github.com/brightcraft/moonlight-tizen) base-client releases from which this fork was created. Their version numbers belong to that base project and are not releases in the independent fidoboy version series.
 
 ### Base client v1.18.0
 
