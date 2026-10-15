@@ -3295,6 +3295,152 @@ function sendEscapeKeyToHost() {
   Module.sendKeyboardEvent(0x80 << 8 | 0x1B, 0x04, 0); // Key up
 }
 
+// Send a key combination to the host, pressing the keys in order and releasing them in reverse order
+function sendKeyCombinationToHost(keyCodes) {
+  // Modifier flags of the modifier keys: Left Shift, Left Ctrl, Left Alt and Left Windows
+  const modifierFlags = { 0xA0: 0x01, 0xA2: 0x02, 0xA4: 0x04, 0x5B: 0x08 };
+  var modifiers = 0;
+  keyCodes.forEach(function(keyCode) {
+    modifiers |= modifierFlags[keyCode] || 0;
+    Module.sendKeyboardEvent(0x80 << 8 | keyCode, 0x03, modifiers); // Key down
+  });
+  keyCodes.slice().reverse().forEach(function(keyCode) {
+    modifiers &= ~(modifierFlags[keyCode] || 0);
+    Module.sendKeyboardEvent(0x80 << 8 | keyCode, 0x04, modifiers); // Key up
+  });
+}
+
+// Create a Stream Menu option that sends a key combination to the host
+function sendKeysMenuOption(id, keysLabel, keyCodes) {
+  return {
+    id: id,
+    text: t('Send %1$s', keysLabel),
+    action: function() {
+      sendKeyCombinationToHost(keyCodes);
+    }
+  };
+}
+
+// Define the options of the Stream Menu in display order, add, remove or reorder entries here to change the menu
+function getStreamMenuOptions() {
+  return [
+    sendKeysMenuOption('streamMenuSendWin', 'WIN', [0x5B]),
+    sendKeysMenuOption('streamMenuSendAltTab', 'ALT + TAB', [0xA4, 0x09]),
+    sendKeysMenuOption('streamMenuSendAltF4', 'ALT + F4', [0xA4, 0x73]),
+    sendKeysMenuOption('streamMenuSendF11', 'F11', [0x7A]),
+    {
+      id: 'streamMenuToggleStats',
+      text: t('Toggle performance stats'),
+      action: function() {
+        Module.toggleStats();
+      }
+    },
+    {
+      id: 'streamMenuDisconnect',
+      text: t('Disconnect'),
+      action: function() {
+        Module.stopStream();
+      }
+    },
+  ];
+}
+
+function streamMenuDialog() {
+  var streamMenuDialogOverlay = $('<div>', {
+    id: 'streamMenuDialogOverlay',
+    class: 'dialog-overlay'
+  }).appendTo(document.body);
+  var streamMenuDialog = $('<dialog>', {
+    id: 'streamMenuDialog',
+    class: 'mdl-dialog'
+  }).appendTo(streamMenuDialogOverlay);
+  $('<h3>', {
+    id: 'streamMenuDialogTitle',
+    class: 'mdl-dialog__title',
+    'data-i18n': 'Stream Menu',
+    text: t('Stream Menu')
+  }).appendTo(streamMenuDialog);
+  var streamMenuDialogContent = $('<div>', {
+    class: 'mdl-dialog__content'
+  }).appendTo(streamMenuDialog);
+
+  getStreamMenuOptions().forEach(function(menuOption) {
+    var streamMenuDialogOption = $('<button>', {
+      type: 'button',
+      id: menuOption.id,
+      class: 'mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+      text: menuOption.text
+    });
+    streamMenuDialogOption.click(function() {
+      closeStreamMenuDialog(true);
+      menuOption.action();
+    });
+    streamMenuDialogOption.appendTo(streamMenuDialogContent);
+  });
+
+  var streamMenuDialogActions = $('<div>', {
+    class: 'mdl-dialog__actions'
+  }).appendTo(streamMenuDialog);
+  $('<button>', {
+    type: 'button',
+    id: 'closeStreamMenu',
+    class: 'mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect',
+    'data-i18n': 'Close',
+    text: t('Close')
+  }).click(function() {
+    closeStreamMenuDialog(true);
+  }).appendTo(streamMenuDialogActions);
+
+  if (!streamMenuDialog[0].showModal) {
+    dialogPolyfill.registerDialog(streamMenuDialog[0]);
+  }
+  if (document.pointerLockElement) {
+    document.exitPointerLock();
+  }
+  window.addEventListener('mousemove', stopMouseMovePropagation, true);
+  $(streamMenuDialogOverlay).css('display', 'flex');
+  streamMenuDialog[0].showModal();
+  isDialogOpen = true;
+  Views.StreamMenuDialog.view.index = 0;
+  Navigation.start();
+  Navigation.push(Views.StreamMenuDialog);
+  setTimeout(() => Navigation.switch(), 5);
+}
+
+function closeStreamMenuDialog(returnToStream) {
+  var streamMenuDialogOverlay = $('#streamMenuDialogOverlay');
+  if (streamMenuDialogOverlay.length === 0) {
+    return;
+  }
+  Navigation.pop();
+  Navigation.stop();
+  window.removeEventListener('mousemove', stopMouseMovePropagation, true);
+  $('#streamMenuDialog')[0].close();
+  streamMenuDialogOverlay.remove();
+  isDialogOpen = false;
+  if (returnToStream) {
+    var videoElement = document.getElementById('wasm_module');
+    videoElement.focus();
+    if (document.pointerLockElement !== videoElement) {
+      videoElement.dispatchEvent(new MouseEvent('mousedown', {
+        bubbles: true, cancelable: true, view: window, clientX: 0, clientY: 0
+      }));
+    }
+  }
+}
+
+function stopMouseMovePropagation(e) {
+  e.stopPropagation();
+}
+
+function toggleStreamMenuDialog() {
+  if ($('#streamMenuDialogOverlay').length > 0) {
+    closeStreamMenuDialog(true);
+  } else if (!isDialogOpen && document.getElementById('wasm_module').style.display !== 'none') {
+    streamMenuDialog();
+  }
+}
+
 let indexedDB = null;
 const dbVersion = 1.0;
 let db = null;
@@ -4227,6 +4373,9 @@ function initSamsungKeys() {
       //'VolumeUp',      // F10
       'ChannelDown',     // F11
       'ChannelUp',       // F12
+      'MediaPlayPause',
+      'MediaPause',
+      'MediaPlay',
     ],
     onKeydownListener: remoteControllerHandler
   };
@@ -4243,15 +4392,28 @@ function initSpecialKeys() {
 
   // Listen for keydown events on the video element
   videoElement.addEventListener('keydown', function(e) {
-    // Check if the 'Back' key has been pressed and the streaming is currently active
     if (e.key === 'XF86Back' && isInGame === true) {
-      // Send the Escape key (ESC) to the host while streaming
       sendEscapeKeyToHost();
-      // Simulate mouse to move focus back to the streaming session
       videoElement.dispatchEvent(new MouseEvent('mousedown', {
         bubbles: true, cancelable: true, view: window, clientX: 0, clientY: 0
       }));
     }
+  });
+
+  // Capture media keys before the streaming session and suppress the TV's default action.
+  ['keydown', 'keyup'].forEach(function(eventType) {
+    window.addEventListener(eventType, function(e) {
+      if (typeof tvKey === 'undefined' || !isInGame) return;
+      if (e.keyCode === tvKey.KEY_PLAY_PAUSE ||
+          e.keyCode === tvKey.KEY_PAUSE ||
+          e.keyCode === tvKey.KEY_PLAY) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === 'keydown' && !e.repeat) {
+          toggleStreamMenuDialog();
+        }
+      }
+    }, true);
   });
 }
 

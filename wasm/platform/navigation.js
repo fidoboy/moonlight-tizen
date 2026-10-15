@@ -1893,6 +1893,38 @@ const Views = {
       setTimeout(() => blurElement(this.view.current()), 100);
     },
   },
+  StreamMenuDialog: {
+    // Read options from the dialog so they match getStreamMenuOptions().
+    view: new ListView(() => document.querySelectorAll('#streamMenuDialog button')),
+    up: function() {
+      this.view.prevOption();
+      focusElement(this.view.current());
+    },
+    down: function() {
+      this.view.nextOption();
+      focusElement(this.view.current());
+    },
+    left: function() {},
+    right: function() {},
+    accept: function() {
+      clickElement(this.view.current());
+    },
+    back: function() {
+      resolveElement('closeStreamMenu').click();
+    },
+    press: function() {},
+    switch: function() {
+      focusElement(this.view.current());
+    },
+    enter: function() {
+      mark(this.view.current());
+      setTimeout(() => focusElement(this.view.current()), 100);
+    },
+    leave: function() {
+      unmark(this.view.current());
+      blurElement(this.view.current());
+    },
+  },
 };
 
 const Navigation = (function() {
