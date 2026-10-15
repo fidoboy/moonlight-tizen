@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - ac3-audio-passthrough
     paths:
       - 'CMakeLists.txt'
       - 'res/**'

@@ -16,7 +16,7 @@ permissions:
 jobs:
   auto-comment:
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'brightcraft/moonlight-tizen' }}
+    if: ${{ github.repository == 'fidoboy/moonlight-tizen' }}
     # Add comments on open or closed issues and pull requests and notify the author that they will receive feedback soon.
     steps:
       - name: Auto-comment on issue or pull request

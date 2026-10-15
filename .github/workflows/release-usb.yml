@@ -140,7 +140,7 @@ jobs:
             - Choose one of the available [installation methods](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Installation-Guide.md) and follow the instructions to install the application on your TV.
 
             > [!NOTE]
-            > This package is based on the independent fork's current stable release.
+            > This package is based on the project's current stable release.
             > The USB installation method is valid for 30 days due to Samsung certificate restrictions.
             > After this period, you must reinstall the latest USB package to continue using the application.
           draft: false

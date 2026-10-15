@@ -98,7 +98,7 @@ jobs:
           body: |
             Development pre-release from branch ${{ github.ref_name }} at commit ${{ github.sha }}.
 
-            This package is intended for testing, not as a stable release. It uses the independent fork version series and a prerelease tag based on the current base version.
+            This package is intended for testing, not as a stable release. It uses the project's independent version series and a prerelease tag based on the current base version.
 
             Dolby optical audio requires the compatible [fidoboy/Sunshine ac3-audio branch](https://github.com/fidoboy/Sunshine/tree/ac3-audio). OPUS-only hosts remain supported.
 
