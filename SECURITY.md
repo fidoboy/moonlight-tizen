@@ -6,7 +6,7 @@ Security vulnerabilities may be reported for any publicly released version. Repo
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please report it privately through [GitHub's private vulnerability reporting](https://github.com/brightcraft/moonlight-tizen/security/advisories/new).
+If you discover a security vulnerability, please use [GitHub's private vulnerability reporting for this repository](https://github.com/fidoboy/moonlight-tizen-ac3/security/advisories/new). If private reporting is unavailable, contact the maintainer privately through [GitHub](https://github.com/fidoboy); do not disclose the vulnerability in a public issue.
 
 Please do not disclose the vulnerability publicly before it has been investigated and addressed.
 

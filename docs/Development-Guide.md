@@ -1,27 +1,23 @@
 # Development Guide
 
-## Repository and submodules
+## Repository and dependencies
 
 Clone this repository and initialize the submodules before building:
 
 ```bash
-git clone --recurse-submodules https://github.com/fidoboy/moonlight-tizen-ac3.git
-cd moonlight-tizen
+git clone https://github.com/fidoboy/moonlight-tizen-ac3.git
+cd moonlight-tizen-ac3
 ```
 
-If the repository was cloned without submodules, run:
-
-```bash
-git submodule update --init --recursive
-```
+The current repository has no active Git submodules: the required dependency source trees are committed directly to the repository. A normal clone is sufficient; `git submodule update --init --recursive` is not required.
 
 ## Build with Docker
 
 The repository Dockerfile includes the build environment and packages the Tizen widget. From the repository root, build the standard variant:
 
 ```bash
-docker build --tag moonlight-tizen:standard --build-arg BUILD_TYPE=release --build-arg REPO_OWNER=fidoboy --build-arg REPO_NAME=moonlight-tizen --build-arg FORCE_GAME_MODE=false .
-container_id=$(docker create moonlight-tizen:standard)
+docker build --tag moonlight-tizen-ac3:standard --build-arg BUILD_TYPE=release --build-arg REPO_OWNER=fidoboy --build-arg REPO_NAME=moonlight-tizen-ac3 --build-arg FORCE_GAME_MODE=false .
+container_id=$(docker create moonlight-tizen-ac3:standard)
 docker cp "$container_id:/home/moonlight/Moonlight.wgt" ./Moonlight.wgt
 docker rm "$container_id"
 ```

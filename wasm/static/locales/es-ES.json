@@ -270,7 +270,7 @@
   "Compatibility Warning": "Advertencia de compatibilidad",
   "Game Mode (Ultra Low Latency) is not compatible with Tizen %1$s due to platform changes introduced by Samsung.": "El modo de juego (latencia ultrabaja) no es compatible con Tizen %1$s debido a cambios de plataforma introducidos por Samsung.",
   "Enabling this option may result in video freezing on the first rendered frame, black screen, unstable performance, and other streaming issues.<br><br>": "Activar esta opción puede congelar el vídeo en el primer fotograma, provocar una pantalla negra, un rendimiento inestable y otros problemas de retransmisión.<br><br>",
-  "For more information about this incompatibility, including available workarounds and potential limitations, please refer to the <b>Known Issues &amp; Limitations</b> page on the Wiki.": "Para obtener más información sobre esta incompatibilidad, posibles soluciones y limitaciones, consulta la página <b>Problemas conocidos y limitaciones</b> de la wiki.",
+  "For more information about this incompatibility and possible workarounds, please refer to the <b>Known Issues &amp; Limitations</b> documentation in this project.": "Para obtener más información sobre esta incompatibilidad y sus posibles soluciones, consulta la documentación de <b>Problemas conocidos y limitaciones</b> de este proyecto.",
   "App Version: %1$s v%2$s": "Versión de la aplicación: %1$s v%2$s",
   "Platform Version: Tizen %1$s": "Versión de la plataforma: Tizen %1$s",
   "Unknown": "Desconocido",

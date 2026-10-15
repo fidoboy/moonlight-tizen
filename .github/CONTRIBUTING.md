@@ -24,4 +24,4 @@ Use `wasm/static/locales/en-US.json` as the source language. Keep locale keys an
 
 ## Pull requests
 
-The repository's GitHub Issues tracker is currently disabled. Contributions can be proposed with a pull request against `master`. Describe what changed, how it was tested, known limitations, and any implications for existing OPUS-only hosts. Existing hosts that only provide OPUS must remain supported unless a documented breaking change is explicitly intended.
+Report bugs and request features through the repository's [GitHub Issues](https://github.com/fidoboy/moonlight-tizen-ac3/issues/new/choose). Contributions to the code can be proposed with a pull request against `master`. Describe what changed, how it was tested, known limitations, and any implications for existing OPUS-only hosts. Existing hosts that only provide OPUS must remain supported unless a documented breaking change is explicitly intended.

@@ -1,4 +1,4 @@
-# Moonlight port for Samsung Smart TVs running Tizen OS
+# Moonlight Tizen — Samsung TV build notes
 
 This is a fork of the `Moonlight Chrome` project adapted to run on Samsung Tizen TVs.
 Changes made:
@@ -11,12 +11,9 @@ Changes made:
 - [Tizen WASM Player](https://developer.samsung.com/smarttv/develop/extension-libraries/webassembly/tizen-wasm-player/overview.html)
 - [Tizen Sockets Extension](https://developer.samsung.com/smarttv/develop/extension-libraries/webassembly/api-reference/tizen-sockets-extension.html)
 
-## Checking out required submodules
-Since some of the dependencies used are provided as git submodules, after cloning this repository (if you did not provide the `--recurse-submodules` option while cloning) you need to issue the below command:
+## Dependencies
 
-```bash
-git submodule update --init --recursive
-```
+This independent repository currently has no active Git submodules. The required dependency source trees are committed directly in the repository, so a normal clone is sufficient and no `git submodule update` step is needed.
 
 ## Building
 
