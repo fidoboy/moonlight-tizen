@@ -36,7 +36,7 @@ Dolby passthrough requires the matching experimental [Sunshine ac3-audio build](
 
 1. Connect the TV's optical output to the receiver or sound system.
 2. In the TV's sound settings, choose an output mode that passes through a supported Dolby bitstream rather than forcing PCM stereo. The exact labels vary by model.
-3. In Moonlight Settings, enable **Enable optical output** and select Stereo or 5.1.
+3. In Moonlight Settings, enable **Enable Dolby Digital** and select Stereo or 5.1.
 4. Start a stream and open the performance overlay with **Ctrl+Alt+Shift+S**. Check whether the active audio line reports OPUS, AC-3 or E-AC-3 and the expected channel layout.
 
 If the host only offers OPUS, the stream continues to use OPUS. An enabled client switch alone cannot make an OPUS-only host send Dolby audio.
