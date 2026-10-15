@@ -47,4 +47,4 @@ An enabled setting alone does not prove a Dolby stream was negotiated. The audio
 
 ## Collecting useful diagnostic information
 
-Record the Moonlight fork version, TV model/Tizen version, Sunshine version and branch, codec and channel layout shown in statistics, resolution/FPS/bitrate settings, and whether the issue reproduces with OPUS. Avoid posting public IP addresses, PINs, private keys or other secrets.
+Record the Moonlight project version, TV model/Tizen version, Sunshine version and branch, codec and channel layout shown in statistics, resolution/FPS/bitrate settings, and whether the issue reproduces with OPUS. Avoid posting public IP addresses, PINs, private keys or other secrets.

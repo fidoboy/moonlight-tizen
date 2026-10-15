@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-## Does the fork work with ordinary Sunshine hosts?
+## Does this project work with ordinary Sunshine hosts?
 
 Yes. The Dolby extension is optional. If the host does not advertise or select AC-3/E-AC-3, the client retains the normal OPUS path. No Dolby-specific host change is required for an OPUS-only stream.
 
@@ -8,7 +8,7 @@ Yes. The Dolby extension is optional. If the host does not advertise or select A
 
 You need all of the following:
 
-- This fork with **Enable optical output** enabled.
+- This project with **Enable optical output** enabled.
 - A matching Sunshine build with the `ac3-audio` implementation and an available Dolby encoder.
 - A TV that can pass the selected Dolby bitstream over its optical connection.
 - TV sound settings configured for a compatible passthrough/bitstream mode.

@@ -34,12 +34,12 @@ The **Build WGT (CI)** workflow validates startup JavaScript, locale consistency
 
 ## Publish a versioned public release
 
-The fork uses its own semantic version sequence, starting at **1.0.0**. The Tizen widget version in `res/config.xml` is the source of truth.
+The project uses its own semantic version sequence, starting at **1.0.0**. The Tizen widget version in `res/config.xml` is the source of truth.
 
 1. Update the version in `res/config.xml` (for example, `1.0.1` for the next patch release).
 2. Add release notes near the top of `CHANGELOG.md`.
 3. Commit and merge the release changes to `master`.
-4. Open Actions → **Release WGTs**, run it on `master`, and enter the same version. The workflow validates the version, builds both WGT variants and publishes a public GitHub Release tagged `vVERSION`.
+4. Open Actions → **Release WGTs**, run it on `master`, and enter the same version. The workflow validates the version, refuses to overwrite an existing public release, builds both WGT variants and publishes a public GitHub Release tagged `vVERSION`.
 
 Alternatively, push a Git tag such as `v1.0.1` after setting the matching `res/config.xml` version. The same workflow builds the packages and attaches them to the release automatically. Stable releases use the plain semantic version tag; prerelease builds use a `-dev` suffix.
 
