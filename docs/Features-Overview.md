@@ -1,8 +1,8 @@
 # Features Overview
 
-This page describes the independently maintained fidoboy Moonlight Tizen project. Feature availability depends on TV model, Tizen version, host configuration, network and connected peripherals.
+This page describes the Moonlight for Tizen client project. Feature availability depends on TV model, Tizen version, host configuration, network and connected peripherals.
 
-## Primary feature: Dolby audio over optical output
+## Primary feature over other clients: Dolby audio over optical output
 
 The defining feature of this project is optional passthrough of Dolby Digital and Dolby Digital Plus audio for compatible Samsung TVs connected to a receiver or sound system over optical (TOSLINK).
 
