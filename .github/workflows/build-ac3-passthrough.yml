@@ -1,8 +1,9 @@
-name: Experimental AC-3 Tizen build
+name: Build WGT (CI)
 
 on:
   push:
     branches:
+      - master
       - ac3-audio-passthrough
     paths:
       - 'CMakeLists.txt'
@@ -10,30 +11,47 @@ on:
       - 'Dockerfile'
       - 'moonlight-common-c/**'
       - 'wasm/**'
-      - '.github/workflows/build-ac3-passthrough.yml'
+      - 'docs/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - '.github/workflows/**'
+  pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build signed Tizen WGT
+  validate-and-build:
+    name: Build ${{ matrix.variant }} WGT
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: standard
+            force_game_mode: 'false'
+            artifact: Moonlight
+          - variant: forcegm
+            force_game_mode: 'true'
+            artifact: Moonlight-ForceGM
     steps:
-      - name: Checkout repository
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Validate startup JavaScript and Spanish locale
+      - name: Validate JavaScript, locales and local documentation
         shell: bash
         run: |
           set -euo pipefail
           node --check wasm/platform/index.js
           node --check wasm/platform/messages.js
+          node --check wasm/static/js/i18n-sync.js
           python3 - <<'PY'
           import json
           from pathlib import Path
@@ -43,59 +61,78 @@ jobs:
           missing = sorted(set(en) - set(es))
           extra = sorted(set(es) - set(en))
           if missing or extra:
-              raise SystemExit(
-                  "Spanish locale keys differ from en-US.json. "
-                  f"Missing={missing!r}; extra={extra!r}"
-              )
+              raise SystemExit(f"Spanish locale keys differ: Missing={missing!r}; extra={extra!r}")
+
+          pt = json.loads(Path("wasm/static/locales/pt-BR.json").read_text(encoding="utf-8"))
           required = {
               "Audio stream:",
               "Optical audio output",
               "Enable optical output",
-              "- When enabled, Moonlight negotiates AC-3 or E-AC-3 with the host when available instead of default Opus. Channel layout stays selectable; AC-3 supports up to 5.1, while E-AC-3 may support 7.1 when supported by the host and playback path.",
               "Quit host app on disconnect",
-              "- When enabled, Moonlight attempts to quit the app running on the host after a normal disconnection. Unexpected connection failures do not trigger this option.",
               "Automatically quit the running app on the host",
-              "Could not automatically quit the host app."
           }
-          for locale_name, locale in (("en-US", en), ("es-ES", es)):
+          for name, locale in (("en-US", en), ("es-ES", es), ("pt-BR", pt)):
               missing_required = sorted(required - set(locale))
               if missing_required:
-                  raise SystemExit(f"{locale_name} is missing optical-output strings: {missing_required!r}")
-          pt = json.loads(Path("wasm/static/locales/pt-BR.json").read_text(encoding="utf-8"))
-          missing_pt = sorted(required - set(pt))
-          if missing_pt:
-              raise SystemExit(f"pt-BR is missing optical-output strings: {missing_pt!r}")
-          print(f"Spanish locale key set matches en-US.json ({len(en)} keys); stats and optical-output strings exist in all locales.")
+                  raise SystemExit(f"{name} is missing required feature strings: {missing_required!r}")
+
+          docs = [
+              "docs/README.md",
+              "docs/Features-Overview.md",
+              "docs/Quick-Start-Guide.md",
+              "docs/Installation-Guide.md",
+              "docs/Updating-Guide.md",
+              "docs/Frequently-Asked-Questions.md",
+              "docs/Known-Issues-and-Limitations.md",
+              "docs/Troubleshooting-Guide.md",
+              "docs/Development-Guide.md",
+          ]
+          missing_docs = [name for name in docs if not Path(name).is_file()]
+          if missing_docs:
+              raise SystemExit(f"Missing documentation pages: {missing_docs!r}")
+          print(f"Locale checks passed; {len(docs)} local documentation pages are present.")
           PY
 
-      - name: Build experimental client
+      - name: Build Tizen widget
         uses: docker/build-push-action@v7
         with:
           context: .
           push: false
           load: true
-          tags: moonlight-tizen-ac3:ci
+          tags: moonlight-tizen-ci:${{ matrix.variant }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_TYPE=release
             REPO_OWNER=${{ github.repository_owner }}
             REPO_NAME=${{ github.event.repository.name }}
-            FORCE_GAME_MODE=false
+            FORCE_GAME_MODE=${{ matrix.force_game_mode }}
 
       - name: Extract WGT package
+        env:
+          FORCE_GAME_MODE: ${{ matrix.force_game_mode }}
+          VARIANT: ${{ matrix.variant }}
+          PACKAGE_NAME: ${{ matrix.artifact }}
         shell: bash
         run: |
           set -euo pipefail
-          container_id="$(docker create moonlight-tizen-ac3:ci)"
+          container_id="$(docker create "moonlight-tizen-ci:$VARIANT")"
           trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
-          docker cp "$container_id:/home/moonlight/Moonlight.wgt" "$RUNNER_TEMP/Moonlight-AC3-Experimental.wgt"
-          test -s "$RUNNER_TEMP/Moonlight-AC3-Experimental.wgt"
+          if [[ "$FORCE_GAME_MODE" == "true" ]]; then
+            source_path="/home/moonlight/Moonlight-ForceGM.wgt"
+            target_path="$RUNNER_TEMP/Moonlight-ForceGM.wgt"
+          else
+            source_path="/home/moonlight/Moonlight.wgt"
+            target_path="$RUNNER_TEMP/Moonlight.wgt"
+          fi
+          docker cp "$container_id:$source_path" "$target_path"
+          test -s "$target_path"
+          sha256sum "$target_path"
 
-      - name: Upload experimental WGT
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Moonlight-AC3-Experimental
-          path: ${{ runner.temp }}/Moonlight-AC3-Experimental.wgt
+          name: ${{ matrix.artifact }}-${{ github.sha }}
+          path: ${{ runner.temp }}/${{ matrix.artifact }}.wgt
           if-no-files-found: error
           retention-days: 14
