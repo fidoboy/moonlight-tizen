@@ -26,6 +26,7 @@ This repository is an **independently maintained project derived from** [Brightc
 - **Spanish localization:** adds the es-ES locale and translations for the interface, including the new settings and audio statistics.
 - **Quit host app on disconnect:** an optional setting requests that the running host application quit after a normal disconnection; unexpected connection failures do not trigger it.
 - **Animated native launch screen:** adds an animated Tizen splash screen and its generation script.
+  
   <img width="640" height="360" alt="Moonlight-Tizen-Launch-Preview" src="https://github.com/user-attachments/assets/0ad7457c-4cb5-45ee-9047-0a652ab8b96b" />
 
 - **Settings and input refinements:** improves optical-output settings, their disabled-state presentation and remote navigation, with related keyboard/input refinements.
