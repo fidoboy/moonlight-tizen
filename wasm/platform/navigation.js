@@ -1529,6 +1529,7 @@ const Views = {
     view: new ListView(() => [
       'systemInfoBtn',
       'navigationGuideBtn',
+      'automaticUpdateChecksBtn',
       'checkUpdatesBtn',
       'restartAppBtn'
     ]),
