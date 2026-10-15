@@ -91,12 +91,6 @@ See the project's [CHANGELOG](https://github.com/fidoboy/moonlight-tizen-ac3/blo
 
 This project is developed and maintained independently. GitHub Issues are currently disabled for this repository; for code contributions, open a pull request against `master` with a focused description and test results where possible. Consult the local [Development Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Development-Guide.md) for build and release procedures.
 
----
-
-
-## ❤️ Support and testing
-
-This project does not currently have a separate donation program. Useful ways to support it include testing builds on different Samsung TV models, documenting audio/optical compatibility, reporting reproducible issues through pull requests, and contributing code or translations.
 
 ---
 
