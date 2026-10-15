@@ -2,7 +2,7 @@
 
 ## Updating to a newer project release
 
-1. Open the [Releases page](https://github.com/fidoboy/moonlight-tizen/releases).
+1. Open the [Releases page](https://github.com/fidoboy/moonlight-tizen-ac3/releases).
 2. Download the latest `Moonlight.wgt`, or `Moonlight-ForceGM.wgt` if you specifically use that variant.
 3. Install it with the same method you used previously (Apps2Samsung, Tizen Studio, or the relevant device tooling).
 4. Launch Moonlight and verify that your saved settings and paired host entries are still present.

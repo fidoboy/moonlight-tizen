@@ -1,8 +1,8 @@
 # Moonlight Tizen — Independent Dolby Optical Audio Project
 
-[![Release Version](https://img.shields.io/github/v/release/fidoboy/moonlight-tizen?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/fidoboy/moonlight-tizen/build-ac3-passthrough.yml?branch=master&style=for-the-badge&logo=docker)](https://github.com/fidoboy/moonlight-tizen/actions/workflows/build-ac3-passthrough.yml?query=branch%3Amaster)
-[![Total Downloads](https://img.shields.io/github/downloads/fidoboy/moonlight-tizen/total?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen/releases)
+[![Release Version](https://img.shields.io/github/v/release/fidoboy/moonlight-tizen-ac3?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen-ac3/releases)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/fidoboy/moonlight-tizen-ac3/build-ac3-passthrough.yml?branch=master&style=for-the-badge&logo=docker)](https://github.com/fidoboy/moonlight-tizen-ac3/actions/workflows/build-ac3-passthrough.yml?query=branch%3Amaster)
+[![Total Downloads](https://img.shields.io/github/downloads/fidoboy/moonlight-tizen-ac3/total?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen-ac3/releases)
 
 Moonlight Tizen is a port of [Moonlight ChromeOS](https://github.com/moonlight-stream/moonlight-chrome), an open-source client for NVIDIA GameStream and [Sunshine](https://app.lizardbyte.dev/Sunshine/). It lets you stream games, applications, and your desktop from a PC to a Samsung Smart TV.
 
@@ -36,7 +36,7 @@ Before proceeding with the installation, please take a moment to ensure that you
 - **Client:** Samsung Smart TV running Tizen OS version 5.5 or newer (model year 2020 onwards).
 - **Host:** Gaming PC with a GPU capable of hardware encoding that meets the [system requirements](https://docs.lizardbyte.dev/projects/sunshine/latest/index.html#%EF%B8%8F-system-requirements) for optimal streaming performance.
 - **Network:** Mid-range or high-end wireless router with a stable wireless connection (Wi-Fi 5/6) for the TV and a wired gigabit Ethernet connection (CAT5e or better) for the host PC are strongly recommended.
-- **Input:** [Supported gamepad](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Frequently-Asked-Questions.md#which-controllers-can-i-use) connected to your TV or directly connected to a nearby PC is highly recommended for the best streaming experience.
+- **Input:** [Supported gamepad](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Frequently-Asked-Questions.md#which-controllers-can-i-use) connected to your TV or directly connected to a nearby PC is highly recommended for the best streaming experience.
 
 ---
 
@@ -44,9 +44,9 @@ Before proceeding with the installation, please take a moment to ensure that you
 
 Preparing Moonlight for installation is straightforward, although the exact steps depend on your TV's Tizen version and the method you choose.
 
-- Download a signed WGT from the [project's Releases](https://github.com/fidoboy/moonlight-tizen/releases).
-- Follow this project's [Installation Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Installation-Guide.md).
-- Use the [Quick Start Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Quick-Start-Guide.md) to pair the TV with a streaming host.
+- Download a signed WGT from the [project's Releases](https://github.com/fidoboy/moonlight-tizen-ac3/releases).
+- Follow this project's [Installation Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Installation-Guide.md).
+- Use the [Quick Start Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Quick-Start-Guide.md) to pair the TV with a streaming host.
 
 ---
 
@@ -55,14 +55,14 @@ Preparing Moonlight for installation is straightforward, although the exact step
 
 The guides are maintained in this repository and describe this project's current behavior.
 
-- [Quick Start Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Quick-Start-Guide.md)
-- [Installation Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Installation-Guide.md)
-- [Updating Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Updating-Guide.md)
-- [Features Overview](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Features-Overview.md)
-- [Frequently Asked Questions](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Frequently-Asked-Questions.md)
-- [Known Issues and Limitations](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Known-Issues-and-Limitations.md)
-- [Troubleshooting Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Troubleshooting-Guide.md)
-- [Development Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Development-Guide.md)
+- [Quick Start Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Quick-Start-Guide.md)
+- [Installation Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Installation-Guide.md)
+- [Updating Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Updating-Guide.md)
+- [Features Overview](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Features-Overview.md)
+- [Frequently Asked Questions](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Frequently-Asked-Questions.md)
+- [Known Issues and Limitations](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Known-Issues-and-Limitations.md)
+- [Troubleshooting Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Troubleshooting-Guide.md)
+- [Development Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Development-Guide.md)
 
 ---
 
@@ -75,21 +75,21 @@ The project was then made into a more readily installable Tizen application by [
 
 [Brightcraft's dedicated Moonlight Tizen repository](https://github.com/brightcraft/moonlight-tizen) built on that foundation with extensive ongoing work: refactoring the codebase, updating core libraries, resolving long-standing bugs, improving the UI/UX, maintaining the build process, and integrating community contributions. That work made the application more mature and feature-rich, and provides the technical foundation on which this project builds.
 
-The fidoboy/moonlight-tizen project is maintained independently. Its primary focus is optional Dolby Digital / Dolby Digital Plus passthrough for compatible optical audio setups, while preserving the normal OPUS streaming path for hosts that do not support Dolby. The additional features listed above are maintained alongside that core objective. This project preserves attribution to the earlier projects and contributors whose work it builds upon.
+The fidoboy/moonlight-tizen-ac3 project is maintained independently. Its primary focus is optional Dolby Digital / Dolby Digital Plus passthrough for compatible optical audio setups, while preserving the normal OPUS streaming path for hosts that do not support Dolby. The additional features listed above are maintained alongside that core objective. This project preserves attribution to the earlier projects and contributors whose work it builds upon.
 
 
 ---
 
 ## 📝 Changelogs
 
-See the project's [CHANGELOG](https://github.com/fidoboy/moonlight-tizen/blob/master/CHANGELOG.md) for this release series. Earlier history remains represented in the repository and in the upstream projects acknowledged below.
+See the project's [CHANGELOG](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/CHANGELOG.md) for this release series. Earlier history remains represented in the repository and in the upstream projects acknowledged below.
 
 
 ---
 
 ## 🛠️ Contributing
 
-This project is developed and maintained independently. GitHub Issues are currently disabled for this repository; for code contributions, open a pull request against `master` with a focused description and test results where possible. Consult the local [Development Guide](https://github.com/fidoboy/moonlight-tizen/blob/master/docs/Development-Guide.md) for build and release procedures.
+This project is developed and maintained independently. GitHub Issues are currently disabled for this repository; for code contributions, open a pull request against `master` with a focused description and test results where possible. Consult the local [Development Guide](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/docs/Development-Guide.md) for build and release procedures.
 
 ---
 
@@ -103,7 +103,7 @@ This project does not currently have a separate donation program. Useful ways to
 
 ## ⚖️ License
 
-This project is licensed under the GNU General Public License v3.0. See the project's [LICENSE](https://github.com/fidoboy/moonlight-tizen/blob/master/LICENSE) file for the full license text.
+This project is licensed under the GNU General Public License v3.0. See the project's [LICENSE](https://github.com/fidoboy/moonlight-tizen-ac3/blob/master/LICENSE) file for the full license text.
 
 
 ---
@@ -114,8 +114,8 @@ This project is made possible thanks to the people who dedicate their time, know
 
 The contributor graph below reflects contributions to this repository. Special thanks to Brightcraft and the earlier contributors are recorded separately below.
 
-<a href="https://github.com/fidoboy/moonlight-tizen/graphs/contributors?all=1">
-  <img src="https://contrib.rocks/image?repo=fidoboy/moonlight-tizen"/>
+<a href="https://github.com/fidoboy/moonlight-tizen-ac3/graphs/contributors?all=1">
+  <img src="https://contrib.rocks/image?repo=fidoboy/moonlight-tizen-ac3"/>
 </a>
 
 ### Special thanks to:

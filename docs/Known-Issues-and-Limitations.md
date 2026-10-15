@@ -19,6 +19,6 @@
 
 ## Independent project and release status
 
-This is an independently maintained project that includes hardware-dependent features. Its version sequence starts at 1.0.0 and is separate from versions of the Brightcraft base project. Public release notes and known changes are available on the [Releases page](https://github.com/fidoboy/moonlight-tizen/releases) and in the [Changelog](../CHANGELOG.md).
+This is an independently maintained project that includes hardware-dependent features. Its version sequence starts at 1.0.0 and is separate from versions of the Brightcraft base project. Public release notes and known changes are available on the [Releases page](https://github.com/fidoboy/moonlight-tizen-ac3/releases) and in the [Changelog](../CHANGELOG.md).
 
 When reporting a problem, include the exact project version, TV model and Tizen version, Sunshine version/branch, video settings, audio backend, channel selection and relevant logs.

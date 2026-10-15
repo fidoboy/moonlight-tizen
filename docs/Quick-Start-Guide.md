@@ -16,7 +16,7 @@ See [Prerequisites in the README](../README.md#-prerequisites) for more details.
 
 ## 2. Install the client
 
-Download the standard `Moonlight.wgt` package from the [Releases page](https://github.com/fidoboy/moonlight-tizen/releases). Select the ForceGM package only when you specifically need the alternative Game Mode metadata.
+Download the standard `Moonlight.wgt` package from the [Releases page](https://github.com/fidoboy/moonlight-tizen-ac3/releases). Select the ForceGM package only when you specifically need the alternative Game Mode metadata.
 
 Follow the [Installation Guide](Installation-Guide.md) for Apps2Samsung, Tizen Studio or another supported installation method.
 

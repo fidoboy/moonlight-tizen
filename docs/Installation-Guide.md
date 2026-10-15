@@ -7,7 +7,7 @@ The client is packaged as a signed Tizen widget (`.wgt`). Choose an installation
 - **Moonlight.wgt:** standard package; recommended for most users.
 - **Moonlight-ForceGM.wgt:** alternative package with additional Game Mode metadata. It does not enable Game Mode on models or Tizen versions where the platform does not support it.
 
-Find the latest public packages on the [Releases page](https://github.com/fidoboy/moonlight-tizen/releases). Development builds may also be available as temporary artifacts from [GitHub Actions](https://github.com/fidoboy/moonlight-tizen/actions/workflows/build-ac3-passthrough.yml); those artifacts are intended for testing and expire according to the workflow's retention policy.
+Find the latest public packages on the [Releases page](https://github.com/fidoboy/moonlight-tizen-ac3/releases). Development builds may also be available as temporary artifacts from [GitHub Actions](https://github.com/fidoboy/moonlight-tizen-ac3/actions/workflows/build-ac3-passthrough.yml); those artifacts are intended for testing and expire according to the workflow's retention policy.
 
 ## Method A: Apps2Samsung
 
