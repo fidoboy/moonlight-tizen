@@ -2,7 +2,7 @@
 
 ## Repository and dependencies
 
-Clone this repository and initialize the submodules before building:
+Clone this repository before building:
 
 ```bash
 git clone https://github.com/fidoboy/moonlight-tizen-ac3.git
@@ -26,7 +26,7 @@ To build the ForceGM package, repeat the build with `FORCE_GAME_MODE=true` and e
 
 ## Continuous integration
 
-The **Build WGT (CI)** workflow validates startup JavaScript, locale consistency and required documentation pages, then builds the standard and ForceGM package variants. It runs on changes to the main branch and on pull requests, and can also be launched manually. CI artifacts are temporary test builds, not versioned public releases.
+The **Build WGT (CI)** workflow validates startup JavaScript, locale consistency and required documentation pages, then builds the standard and ForceGM package variants. It runs on changes to the `master` branch and on pull requests, and can also be launched manually. CI artifacts are temporary test builds, not versioned public releases.
 
 ## Publish a versioned public release
 
