@@ -30,7 +30,7 @@
 
 ## Statistics show OPUS instead of AC-3 or E-AC-3
 
-1. Confirm that **Enable optical output** is enabled in Moonlight.
+1. Confirm that **Enable Dolby Digital** is enabled in Moonlight.
 2. Confirm that the host is running the matching experimental [Sunshine ac3-audio branch](https://github.com/fidoboy/Sunshine/tree/ac3-audio) and was built with the optional FFmpeg Dolby encoder available.
 3. Start a new stream after changing the host's audio settings.
 4. Verify that the host log reports the intended AC-3 or E-AC-3 codec and bitrate.
