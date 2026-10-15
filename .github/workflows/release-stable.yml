@@ -12,10 +12,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Semantic version to publish (must match res/config.xml)'
+        description: 'New semantic version to publish; must match res/config.xml and must not already exist'
         required: true
         type: string
-        default: '1.0.0'
 
 permissions:
   contents: write
@@ -55,6 +54,28 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse to overwrite an existing public release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          status="$(curl --silent --show-error --output /tmp/release.json --write-out '%{http_code}' \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG")"
+          if [[ "$status" == "200" ]]; then
+            echo "Release $RELEASE_TAG already exists. Refusing to overwrite a published version." >&2
+            exit 1
+          fi
+          if [[ "$status" != "404" ]]; then
+            echo "Unexpected GitHub API status $status while checking $RELEASE_TAG." >&2
+            cat /tmp/release.json >&2
+            exit 1
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -121,15 +142,15 @@ jobs:
           prerelease: false
           draft: false
           make_latest: true
-          overwrite_files: true
+          overwrite_files: false
           fail_on_unmatched_files: true
           files: |
             dist/Moonlight.wgt
             dist/Moonlight-ForceGM.wgt
           body: |
-            # Moonlight Tizen v${{ steps.version.outputs.version }} — independent fork
+            # Moonlight Tizen v${{ steps.version.outputs.version }} — independent project
 
-            This is the first-party release of the independently maintained fidoboy Moonlight Tizen fork.
+            This is a public release of the independently maintained fidoboy Moonlight Tizen project.
 
             ## Highlights
             - Optional AC-3 (Dolby Digital) and E-AC-3 (Dolby Digital Plus) optical-audio passthrough for compatible TV/receiver configurations.

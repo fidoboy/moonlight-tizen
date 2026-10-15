@@ -1,10 +1,10 @@
 # Features Overview
 
-This page describes the independently maintained fidoboy Moonlight Tizen fork. Feature availability depends on TV model, Tizen version, host configuration, network and connected peripherals.
+This page describes the independently maintained fidoboy Moonlight Tizen project. Feature availability depends on TV model, Tizen version, host configuration, network and connected peripherals.
 
 ## Primary feature: Dolby audio over optical output
 
-The defining feature of this fork is optional passthrough of Dolby Digital and Dolby Digital Plus audio for compatible Samsung TVs connected to a receiver or sound system over optical (TOSLINK).
+The defining feature of this project is optional passthrough of Dolby Digital and Dolby Digital Plus audio for compatible Samsung TVs connected to a receiver or sound system over optical (TOSLINK).
 
 - **AC-3 (Dolby Digital):** stereo or 5.1-channel compressed audio can be sent to Tizen's native EMSS audio renderer when the host negotiates AC-3 successfully.
 - **E-AC-3 (Dolby Digital Plus):** supported where the host, TV firmware, audio-output configuration and receiving equipment accept the format. E-AC-3 over optical is not guaranteed on every TV.
@@ -19,7 +19,7 @@ The optical-audio path has been tested end-to-end with an experimental Sunshine 
 
 The performance overlay, toggled with **Ctrl+Alt+Shift+S**, reports the negotiated audio codec, the channel layout and channel count, and an approximate measured audio bitrate alongside the existing video codec and streaming statistics. The codec label reflects the active session, not merely the selected preference.
 
-## Other improvements specific to this fork
+## Other improvements specific to this project
 
 - **Spanish localization:** includes an `es-ES` interface translation alongside the existing locales.
 - **Quit host app on disconnect:** optional best-effort request to close the running host application after a normal disconnection. Unexpected connection failures do not trigger it.
