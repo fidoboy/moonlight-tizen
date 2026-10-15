@@ -138,7 +138,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.version.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          name: Moonlight Tizen v${{ steps.version.outputs.version }}
+          name: Moonlight Tizen with AC-3 support v${{ steps.version.outputs.version }}
           prerelease: false
           draft: false
           make_latest: true
@@ -148,10 +148,6 @@ jobs:
             dist/Moonlight.wgt
             dist/Moonlight-ForceGM.wgt
           body: |
-            # Moonlight Tizen v${{ steps.version.outputs.version }} — independent project
-
-            This is a public release of the independently maintained fidoboy Moonlight Tizen project.
-
             ## Highlights
             - Optional AC-3 (Dolby Digital) and E-AC-3 (Dolby Digital Plus) optical-audio passthrough for compatible TV/receiver configurations.
             - The normal OPUS audio path remains available; hosts that only offer OPUS remain compatible.
