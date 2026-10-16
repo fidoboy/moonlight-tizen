@@ -399,6 +399,11 @@ function handleMessage(msg) {
     }
 
   } else if (msg === 'Connection Established') {
+    // The direct-launch status must not cover the video while the first frame is arriving.
+    if (window._directSmartHubLaunch) {
+      var directStatusOnConnect = document.getElementById('directSmartHubStatus');
+      if (directStatusOnConnect) directStatusOnConnect.style.display = 'none';
+    }
     // Prepare the screen for video stream
     $('#loadingSpinner').css('display', 'none');
     $('body').css('backgroundColor', 'transparent');
