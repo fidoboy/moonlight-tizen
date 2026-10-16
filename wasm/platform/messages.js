@@ -297,8 +297,34 @@ function handleMessage(msg) {
     $('#loadingSpinner').css('display', 'none');
     $('body').css('backgroundColor', '#282C38');
     $('#wasm_module').css('display', 'none');
-    // Show a termination snackbar message if the termination was unexpected
     var errorCode = parseInt(msg.replace('streamTerminated: ', ''));
+
+    // A direct Smart Hub launch is a single-purpose session: never return to Moonlight's home UI.
+    // Preserve the optional "quit host app after disconnect" behavior for graceful disconnects,
+    // but always exit this client regardless of whether the stream ended normally or with an error.
+    if (window._directSmartHubLaunch) {
+      var shouldQuitDirectHostApp = errorCode === 0 &&
+        $('#quitAppAfterDisconnectSwitch').parent().hasClass('is-checked');
+      var exitDirectLaunch = function() {
+        try {
+          tizen.application.getCurrentApplication().exit();
+        } catch (error) {
+          console.error('%c[messages.js, handleMessage]', 'color: gray;', 'Could not exit after direct Smart Hub session ended:', error);
+        }
+      };
+
+      if (shouldQuitDirectHostApp && window.api && typeof window.api.quitApp === 'function') {
+        window.api.quitApp().then(exitDirectLaunch, function(failedQuitApp) {
+          console.error('%c[messages.js, handleMessage]', 'color: gray;', 'Failed to quit the host app after direct Smart Hub session:', failedQuitApp);
+          exitDirectLaunch();
+        });
+      } else {
+        exitDirectLaunch();
+      }
+      return;
+    }
+
+    // Standard Moonlight launches retain their existing termination messages and return-to-apps flow.
     switch (errorCode) {
       case 0: // ML_ERROR_GRACEFUL_TERMINATION
         break;
