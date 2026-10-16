@@ -3840,6 +3840,7 @@ function saveConfigSummaryVisibility() {
     const enabled = $('#showConfigSummarySwitch').parent().hasClass('is-checked');
     console.log('%c[index.js, saveConfigSummaryVisibility]', 'color: green;', 'Saving configuration summary bar visibility: ' + enabled);
     storeData('showConfigSummaryBar', enabled, null);
+    configSummaryPreferenceLoaded = true;
     updateConfigSummaryBar();
   }, 100);
 }
@@ -4295,6 +4296,7 @@ function restoreDefaultsSettingsValues() {
   const defaultShowConfigSummaryBar = true;
   document.querySelector('#showConfigSummaryBtn').MaterialSwitch.on();
   storeData('showConfigSummaryBar', defaultShowConfigSummaryBar, null);
+  configSummaryPreferenceLoaded = true;
   updateConfigSummaryBar();
 
   const defaultSortAppsList = false;
@@ -4609,6 +4611,7 @@ function loadUserDataCb() {
     } else {
       document.querySelector('#showConfigSummaryBtn').MaterialSwitch.off();
     }
+    configSummaryPreferenceLoaded = true;
     updateConfigSummaryBar();
   });
 
@@ -5438,8 +5441,66 @@ function probeSmartHubSupport() {
   });
 }
 
+// Do not create the summary bar until the persisted preference has been loaded.
+var configSummaryPreferenceLoaded = false;
+
+function createConfigSummaryBar() {
+  var bar = document.createElement('div');
+  bar.id = 'configSummaryBar';
+  bar.setAttribute('aria-label', 'Current Moonlight configuration');
+
+  var items = [
+    { label: 'Resolution', id: 'summaryResolution' },
+    { label: 'FPS', id: 'summaryFps' },
+    { label: 'Bitrate', id: 'summaryBitrate' },
+    { label: 'Optimal bitrate', id: 'summaryOptimalBitrate', toggle: true },
+    { label: 'HDR', id: 'summaryHdr', toggle: true },
+    { label: 'Codec', id: 'summaryCodec' },
+    { label: 'Dolby', id: 'summaryDolby', toggle: true },
+    { label: 'Audio', id: 'summaryAudio' },
+    { label: 'Game mode summary', id: 'summaryGameMode', toggle: true }
+  ];
+
+  items.forEach(function(entry) {
+    var item = document.createElement('div');
+    item.className = 'config-summary-item';
+
+    var label = document.createElement('span');
+    label.className = 'config-summary-label';
+    label.setAttribute('data-i18n', entry.label);
+    label.textContent = typeof t === 'function' ? t(entry.label) : entry.label;
+
+    var value = document.createElement('span');
+    value.id = entry.id;
+    value.className = 'config-summary-value' + (entry.toggle ? ' config-summary-toggle' : '');
+    value.textContent = '—';
+
+    item.appendChild(label);
+    item.appendChild(value);
+    bar.appendChild(item);
+  });
+
+  var mainContent = document.getElementById('main-content');
+  if (mainContent && mainContent.parentNode) {
+    mainContent.parentNode.insertBefore(bar, mainContent);
+  } else {
+    return null;
+  }
+  return bar;
+}
+
 function updateConfigSummaryBar() {
+  var visibilitySwitch = document.getElementById('showConfigSummarySwitch');
+  var summaryEnabled = configSummaryPreferenceLoaded && !!visibilitySwitch && visibilitySwitch.checked;
   var bar = document.getElementById('configSummaryBar');
+
+  // An opt-out removes the element entirely, rather than keeping a hidden DOM subtree.
+  if (!summaryEnabled) {
+    if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+    return;
+  }
+
+  if (!bar) bar = createConfigSummaryBar();
   if (!bar) return;
 
   function isVisible(element) {
@@ -5449,9 +5510,7 @@ function updateConfigSummaryBar() {
   // The strip belongs only to the Hosts and Apps grids, never to Settings or streaming.
   var onHostsScreen = isVisible(document.getElementById('host-grid'));
   var onAppsScreen = isVisible(document.getElementById('game-grid'));
-  var visibilitySwitch = document.getElementById('showConfigSummarySwitch');
-  var summaryEnabled = !visibilitySwitch || visibilitySwitch.checked;
-  var desiredDisplay = summaryEnabled && (onHostsScreen || onAppsScreen) &&
+  var desiredDisplay = (onHostsScreen || onAppsScreen) &&
     !isVisible(document.getElementById('settings-list')) ? 'flex' : 'none';
   if (bar.style.display !== desiredDisplay) bar.style.display = desiredDisplay;
 
