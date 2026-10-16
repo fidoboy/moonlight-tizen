@@ -3,7 +3,7 @@
 
   const LANGUAGE_SETTING_KEY = 'languagePreference';
   const SOURCE_LOCALE = 'en-US';
-  const SUPPORTED_LOCALES = ['en-US', 'es-ES', 'pt-BR', 'fr-FR', 'de-DE'];
+  const SUPPORTED_LOCALES = ['en-US', 'es-ES', 'pt-BR', 'fr-FR', 'de-DE', 'it-IT', 'ru-RU'];
   const LOCALE_LABELS = {
     'auto': 'Auto',
     'en-US': 'English (United States)',
@@ -11,6 +11,8 @@
     'pt-BR': 'Português (Brasil)',
     'fr-FR': 'Français (France)',
     'de-DE': 'Deutsch (Deutschland)',
+    'it-IT': 'Italiano',
+    'ru-RU': 'Русский',
   };
 
   const state = {
