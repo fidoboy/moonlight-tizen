@@ -3275,9 +3275,15 @@ function startGame(host, appID) {
         });
         return;
       });
+    }).catch(function(failedAppLookup) {
+      console.error('%c[index.js, startGame]', 'color: green;', 'Error: Failed to retrieve app ' + appID + ': ' + failedAppLookup);
+      if (_directSmartHubLaunch) directSmartHubLaunchFailure(t('Failed to launch %1$s', String(appID)));
     });
   }, function(failedRefreshInfo) {
     console.error('%c[index.js, startGame]', 'color: green;', 'Error: Failed to refresh server info! Returned error was: ' + failedRefreshInfo + ' and failed server was: ' + '\n', host, '\n' + host.toString()); // Logging both object (for console) and toString-ed object (for text logs)
+    if (_directSmartHubLaunch) {
+      directSmartHubLaunchFailure(t('Failed to connect to %1$s. Ensure Sunshine is running on your host PC or GameStream is enabled in GeForce Experience SHIELD settings.', host.hostname || t('the host')));
+    }
   });
 }
 
