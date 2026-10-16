@@ -35,7 +35,9 @@ LOGO_CENTER_Y = 274.84
 FRAME_WIDTH = 1280
 FRAME_HEIGHT = 720
 STAR_COUNT = 1000
-STAR_SPEED = 18.0
+STAR_SPEED = 25.0
+STAR_SPEED_PEAK_MULTIPLIER = 1.20  # Brief early peak near 30 for a stronger warp effect.
+STAR_ACCELERATION_FRACTION = 0.10  # Use the first 10% of the logo animation to reach that peak.
 MAX_STAR_DEPTH = 1500.0
 STAR_COLOR = "#FFFFFF"
 STARFIELD_SEED = 0x4D4F4F4E  # Keep the generated splash reproducible between builds.
@@ -57,23 +59,26 @@ def interpolate(start, end, progress):
     return start + (end - start) * smoothstep(progress)
 
 
-def smootherstep(progress):
-    """Quintic easing with a gentle start and a gentle, gradual finish."""
-    progress = max(0.0, min(1.0, progress))
-    return progress ** 3 * (progress * (progress * 6.0 - 15.0) + 10.0)
-
-
 def star_speed_for_frame(frame_number):
-    """Decelerate across the full settling phase and reach zero smoothly with the logo."""
-    if frame_number < SECTOR_PHASE_FRAMES:
-        return STAR_SPEED
+    """Build a forceful early warp, then ease the starfield into a soft stop with the logo."""
+    # Synchronize the speed curve with the entire logo reveal (3.6 seconds),
+    # rather than compressing all deceleration into the final 1.2 seconds.
+    progress = max(0.0, min(1.0, frame_number / (ANIMATED_FRAME_COUNT - 1)))
 
-    settle_frame = frame_number - SECTOR_PHASE_FRAMES
-    progress = min(1.0, (settle_frame + 1) / SETTLE_FRAMES)
-    # Interpolate the loss of speed using quintic smootherstep. This avoids
-    # dropping almost all velocity early; motion remains perceptible through
-    # the logo/text reveal, then eases gently into a complete stop.
-    return STAR_SPEED * (1.0 - smootherstep(progress))
+    if progress >= 1.0:
+        return 0.0
+
+    # A small ease-in-style overshoot makes the stars accelerate briefly from
+    # speed 25 toward 30 at the start, before the sustained deceleration begins.
+    acceleration_progress = min(1.0, progress / STAR_ACCELERATION_FRACTION)
+    acceleration = 1.0 + (STAR_SPEED_PEAK_MULTIPLIER - 1.0) * math.sin(
+        acceleration_progress * math.pi / 2.0
+    ) ** 2
+
+    # A cosine envelope preserves motion for longer and has a zero slope at
+    # the end, avoiding a sudden last-frame brake. The logo/text animation
+    # itself is unchanged.
+    return STAR_SPEED * acceleration * math.cos(progress * math.pi / 2.0)
 
 
 class Star:
