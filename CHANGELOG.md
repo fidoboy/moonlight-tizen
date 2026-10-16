@@ -2,6 +2,28 @@
 
 All notable changes to the independently maintained fidoboy Moonlight Tizen fork are recorded here.
 
+## v1.0.3 — Smart Hub integration and interface improvements
+
+### Added
+- **Direct app launching from Samsung Smart Hub:** Added support for launching games and applications directly from their Smart Hub shortcuts. Moonlight connects to the selected host and starts the requested application without loading the full interface, restoring the host grid, or navigating through the usual host and app screens. This significantly reduces startup time compared with the previous launch flow.
+- **Configuration summary:** Added a compact summary to the Hosts and Apps screens showing the current resolution, frame rate, bitrate, optimal bitrate, HDR status, video codec, Dolby audio setting, audio channel configuration, and Game Mode status.
+- **Direct-launch status feedback:** Added lightweight status messages during direct launches, including host and application information where available.
+
+### Changed
+- **Unchanged standard startup:** Launching Moonlight from its own Smart Hub application icon retains the normal startup flow. Direct launching applies only when opening a game or application through its Smart Hub shortcut.
+- **Back/Return navigation:** Pressing the Back/Return key during streaming now opens or closes the Stream Menu. Navigation behavior outside streaming remains unchanged.
+- **Session-local statistics visibility:** Showing or hiding the performance-statistics overlay no longer modifies or saves the persistent setting. The saved preference continues to determine the default visibility for new streaming sessions.
+- **Build identification:** Added a visual marker for non-official builds in the system information panel, while official stable releases retain a clean version display.
+
+### Fixed
+- **Stream Menu highlighting:** Fixed an issue that could leave an additional menu item highlighted when navigating with the remote control.
+- **Direct-launch error handling:** Improved handling of unavailable hosts, saved-configuration errors, connection failures, and application launch or resume failures.
+- **Direct-launch session termination:** Ensured Moonlight exits cleanly when a direct-launch streaming session ends, rather than returning to the regular host and app screens. The optional setting to quit the host application on normal disconnection is still honored.
+- **Status overlay behavior:** Refined direct-launch status messages so they do not obscure the video and are hidden when the connection or video becomes available.
+
+### Localization
+- Updated English, Spanish, and Brazilian Portuguese translations for the configuration summary and the revised navigation guide.
+
 ## v1.0.2 — Stream controls, gamepad identity and pairing fixes
 
 ### Added
