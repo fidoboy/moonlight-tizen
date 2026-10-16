@@ -5169,7 +5169,7 @@ function updatePreviewData() {
           title: app.title,
           subtitle: entry.hostname,
           action_data: JSON.stringify({
-            serverUid: serverUid, address: entry.address, appId: app.id
+            serverUid: serverUid, address: entry.address, appId: app.id, appName: app.title
           }),
           is_playable: true,
           position: totalTiles + index
