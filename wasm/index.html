@@ -20,10 +20,28 @@
     html.app-starting .mdl-layout {
       visibility: hidden !important;
     }
+    /* Lightweight status surface used only by the experimental direct Smart Hub launch. */
+    #directSmartHubStatus {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      padding: 4vw;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 2.5vw;
+      text-align: center;
+      pointer-events: none;
+    }
   </style>
   <script type="text/javascript" src="platform.js"></script>
 </head>
 <body data-name="moonlight-tizen" data-tools="emscripten" data-configs="Debug Release" data-path="{tc}/{config}">
+  <div id="directSmartHubStatus" role="status" aria-live="polite"></div>
   <div class="mdl-layout mdl-js-layout">
     <header id="main-header" class="mdl-layout__header">
       <div class="mdl-layout__header-row">
