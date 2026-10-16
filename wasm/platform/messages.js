@@ -303,6 +303,10 @@ function handleMessage(msg) {
     // Preserve the optional "quit host app after disconnect" behavior for graceful disconnects,
     // but always exit this client regardless of whether the stream ended normally or with an error.
     if (window._directSmartHubLaunch) {
+      // Paint a minimal status message before exiting; do not restore the home UI.
+      if (typeof window.setDirectSmartHubStatus === 'function') {
+        window.setDirectSmartHubStatus('Cerrando la transmisión...');
+      }
       var shouldQuitDirectHostApp = errorCode === 0 &&
         $('#quitAppAfterDisconnectSwitch').parent().hasClass('is-checked');
       var exitDirectLaunch = function() {
@@ -312,14 +316,23 @@ function handleMessage(msg) {
           console.error('%c[messages.js, handleMessage]', 'color: gray;', 'Could not exit after direct Smart Hub session ended:', error);
         }
       };
+      var finishDirectLaunch = function() {
+        // Give the browser one paint opportunity so the status is visible even when
+        // no host-app quit request is needed.
+        if (typeof window.requestAnimationFrame === 'function') {
+          window.requestAnimationFrame(exitDirectLaunch);
+        } else {
+          window.setTimeout(exitDirectLaunch, 0);
+        }
+      };
 
       if (shouldQuitDirectHostApp && window.api && typeof window.api.quitApp === 'function') {
-        window.api.quitApp().then(exitDirectLaunch, function(failedQuitApp) {
+        window.api.quitApp().then(finishDirectLaunch, function(failedQuitApp) {
           console.error('%c[messages.js, handleMessage]', 'color: gray;', 'Failed to quit the host app after direct Smart Hub session:', failedQuitApp);
-          exitDirectLaunch();
+          finishDirectLaunch();
         });
       } else {
-        exitDirectLaunch();
+        finishDirectLaunch();
       }
       return;
     }
@@ -401,6 +414,10 @@ function handleMessage(msg) {
     // Show dialog message using the warning dialog
     warningDialog(t('Connection Error'), translateBackendMessage(msg.replace('DialogMsg: ', '')));
   } else if (msg === 'displayVideo') {
+    // Hide the lightweight direct-launch status once the stream video is ready.
+    if (window._directSmartHubLaunch && typeof window.hideDirectSmartHubStatus === 'function') {
+      window.hideDirectSmartHubStatus();
+    }
     // Show the video stream now
     $('#listener').addClass('fullscreen');
   } else if (msg.indexOf('NoWarningMsg: ') === 0) {
