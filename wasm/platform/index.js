@@ -3518,6 +3518,7 @@ function openIndexDB(callback) {
 
   request.onerror = function(e) {
     console.error('%c[index.js, openIndexDB]', 'color: green;', 'Error: Cannot create or access the IndexedDB database: ', e);
+    if (_directSmartHubLaunch) directSmartHubLaunchFailure('Moonlight could not load its saved configuration.');
   };
 
   request.onsuccess = function(e) {
