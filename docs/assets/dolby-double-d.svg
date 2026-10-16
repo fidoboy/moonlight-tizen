@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" role="img" aria-labelledby="title">
-<title id="title">Dolby double-D symbol</title>
-<path fill="#6e7681" d="M0 3.564v16.872h2.488c4.648 0 8.438-3.788 8.438-8.436s-3.79-8.436-8.438-8.436H0zm21.512 0c-4.648 0-8.438 3.788-8.438 8.436s3.79 8.436 8.438 8.436H24V3.564h-2.488z"/>
+  <title id="title">Dolby double-D symbol, white with transparent cutouts</title>
+  <defs>
+    <mask id="transparentDoubleD" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+      <rect width="24" height="24" fill="#fff"/>
+      <path fill="#000" transform="translate(4.2 4.2) scale(0.65)" d="M0 3.564v16.872h2.488c4.648 0 8.438-3.788 8.438-8.436s-3.79-8.436-8.438-8.436H0zm21.512 0c-4.648 0-8.438 3.788-8.438 8.436s3.79 8.436 8.438 8.436H24V3.564h-2.488z"/>
+    </mask>
+  </defs>
+  <rect x="1" y="3.5" width="22" height="17" fill="#fff" mask="url(#transparentDoubleD)"/>
 </svg>
