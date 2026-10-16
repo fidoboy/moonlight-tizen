@@ -5255,7 +5255,11 @@ function getSmartHubLaunchPayload() {
       var payload = JSON.parse(data[i].value[0]);
       var actionData = JSON.parse(payload.values);
       if (actionData && actionData.serverUid && actionData.appId !== null && actionData.appId !== undefined) {
-        return { serverUid: String(actionData.serverUid), appId: actionData.appId };
+        return {
+          serverUid: String(actionData.serverUid),
+          appId: actionData.appId,
+          appName: String(actionData.appName || actionData.appTitle || actionData.title || actionData.name || actionData.appId)
+        };
       }
     }
   } catch (error) {
@@ -5266,6 +5270,25 @@ function getSmartHubLaunchPayload() {
 
 // Capture before WebAssembly can begin host initialization.
 _directSmartHubLaunch = getSmartHubLaunchPayload();
+
+function setDirectSmartHubStatus(message) {
+  if (!_directSmartHubLaunch) return;
+  var statusElement = document.getElementById('directSmartHubStatus');
+  if (!statusElement) return;
+  statusElement.textContent = message;
+  statusElement.style.display = 'flex';
+}
+
+function hideDirectSmartHubStatus() {
+  var statusElement = document.getElementById('directSmartHubStatus');
+  if (statusElement) statusElement.style.display = 'none';
+}
+
+if (_directSmartHubLaunch) {
+  // Keep the direct-launch path lightweight: only show one plain text status line,
+  // without restoring or initializing the normal Moonlight interface.
+  setDirectSmartHubStatus('Iniciando ' + _directSmartHubLaunch.appName + '...');
+}
 
 function directSmartHubLaunchFailure(message) {
   if (!_directSmartHubLaunch || _directSmartHubLaunchFailed) return;
