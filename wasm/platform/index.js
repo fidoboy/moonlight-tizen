@@ -5398,8 +5398,89 @@ function probeSmartHubSupport() {
   });
 }
 
+function updateConfigSummaryBar() {
+  var bar = document.getElementById('configSummaryBar');
+  if (!bar) return;
+
+  function isVisible(element) {
+    return !!element && window.getComputedStyle(element).display !== 'none';
+  }
+
+  // The strip belongs only to the Hosts and Apps grids, never to Settings or streaming.
+  var onHostsScreen = isVisible(document.getElementById('host-grid'));
+  var onAppsScreen = isVisible(document.getElementById('game-grid'));
+  var desiredDisplay = (onHostsScreen || onAppsScreen) &&
+    !isVisible(document.getElementById('settings-list')) ? 'flex' : 'none';
+  if (bar.style.display !== desiredDisplay) bar.style.display = desiredDisplay;
+
+  function textFor(selector, fallback) {
+    var element = document.querySelector(selector);
+    if (!element) return fallback;
+    var value = element.getAttribute('data-value');
+    if (value == null || value === '') value = element.textContent;
+    value = String(value || '').trim();
+    return value || fallback;
+  }
+
+  function toggleFor(selector, summarySelector) {
+    var input = document.querySelector(selector);
+    var enabled = !!input && input.checked;
+    var output = document.querySelector(summarySelector);
+    if (!output) return;
+    output.textContent = enabled ? 'on' : 'off';
+    output.classList.toggle('is-on', enabled);
+    output.classList.toggle('is-off', !enabled);
+  }
+
+  var resolution = textFor('#selectResolution', '1280:720').replace(':', ' × ');
+  var fps = textFor('#selectFramerate', '60');
+  fps = /fps/i.test(fps) ? fps : fps + ' FPS';
+  var bitrate = textFor('#selectBitrate', '10 Mbps');
+  if (!/mbps/i.test(bitrate)) bitrate += ' Mbps';
+  var codec = textFor('#selectCodec', 'H264').replace(/^H\.264$/i, 'H264');
+  var audioValue = textFor('#selectAudio', 'Stereo');
+  var audio = audioValue === '51Surround' ? '5.1' :
+    (audioValue === '71Surround' ? '7.1' :
+      (/stereo/i.test(audioValue) ? 'Stereo' : audioValue));
+
+  function setSummaryText(selector, value) {
+    var output = document.querySelector(selector);
+    if (output && output.textContent !== value) output.textContent = value;
+  }
+
+  setSummaryText('#summaryResolution', resolution);
+  setSummaryText('#summaryFps', fps);
+  setSummaryText('#summaryBitrate', bitrate);
+  setSummaryText('#summaryCodec', codec);
+  setSummaryText('#summaryAudio', audio);
+  toggleFor('#optimizeBitrateSwitch', '#summaryOptimalBitrate');
+  toggleFor('#hdrModeSwitch', '#summaryHdr');
+  toggleFor('#ac3AudioModeSwitch', '#summaryDolby');
+  toggleFor('#gameModeSwitch', '#summaryGameMode');
+}
+
+function initializeConfigSummaryBar() {
+  updateConfigSummaryBar();
+  if (typeof MutationObserver !== 'function' || !document.body) return;
+
+  // Track setting changes and screen navigation without coupling the strip to each handler.
+  var observer = new MutationObserver(function() {
+    updateConfigSummaryBar();
+  });
+  observer.observe(document.body, {
+    subtree: true,
+    childList: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['class', 'style', 'data-value', 'checked']
+  });
+  document.addEventListener('input', updateConfigSummaryBar, true);
+  document.addEventListener('change', updateConfigSummaryBar, true);
+}
+
 function onWindowLoad() {
   console.log('%c[index.js, onWindowLoad]', 'color: green;', 'Moonlight\'s main window loaded.');
+  initializeConfigSummaryBar();
   initSamsungKeys();
   initSpecialKeys();
   loadUserData();
