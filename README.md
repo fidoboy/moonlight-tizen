@@ -33,7 +33,7 @@ This repository is an **independently maintained project derived from** [Brightc
 - **Audio stream statistics:** shows the negotiated audio codec, channel layout, channel count, and approximate audio bitrate alongside the existing video and performance statistics.
 - **Spanish localization:** adds the es-ES locale and translations for the interface, including the new settings and audio statistics.
 - **Quit host app on disconnect:** an optional setting requests that the running host application quit after a normal disconnection; unexpected connection failures do not trigger it.
-- **Animated native launch screen:** adds an animated Tizen splash screen and its generation script.
+- **Animated native launch screen:** adds an animated Tizen splash screen.
   
   <img width="640" height="360" alt="Moonlight-Tizen-Launch-Preview" src="https://github.com/user-attachments/assets/0c0be6c1-36fc-4c5b-ade8-e9e45e27376a" />
 
