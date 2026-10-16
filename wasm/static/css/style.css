@@ -832,6 +832,17 @@ body {
 .setting-option {
     margin: 25px;
 }
+#removeAllHostsOption {
+    box-sizing: border-box;
+    padding: 14px 16px 18px;
+    border: 1px solid rgba(255, 70, 70, 0.72);
+    border-radius: 12px;
+    background-color: rgba(220, 38, 38, 0.14);
+}
+.host-removal-consequences {
+    color: #ff9696;
+    font-weight: 700;
+}
 .settings-options label {
     color: #cfcfcf;
     display: inline-block;

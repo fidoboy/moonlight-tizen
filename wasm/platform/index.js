@@ -1716,7 +1716,7 @@ function deleteAllHostsDialog() {
 
     // Change the dialog title and text elements
     document.getElementById('deleteHostDialogTitle').innerHTML = t('Delete All Hosts');
-    document.getElementById('deleteHostDialogText').innerHTML = t('Are you sure you want to delete all existing hosts?');
+    document.getElementById('deleteHostDialogText').innerHTML = t('Are you sure you want to delete all existing hosts?') + '<br><br><strong class="host-removal-consequences">' + t('All saved host entries will be removed from Moonlight. To use these hosts again, you may need to add and pair them again. The host PCs and their files will not be affected.') + '</strong>';
     
     // Show the dialog and push the view
     deleteHostOverlay.style.display = 'flex';

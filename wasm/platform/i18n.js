@@ -3,12 +3,14 @@
 
   const LANGUAGE_SETTING_KEY = 'languagePreference';
   const SOURCE_LOCALE = 'en-US';
-  const SUPPORTED_LOCALES = ['en-US', 'es-ES', 'pt-BR'];
+  const SUPPORTED_LOCALES = ['en-US', 'es-ES', 'pt-BR', 'fr-FR', 'de-DE'];
   const LOCALE_LABELS = {
     'auto': 'Auto',
     'en-US': 'English (United States)',
     'es-ES': 'Español (España)',
     'pt-BR': 'Português (Brasil)',
+    'fr-FR': 'Français (France)',
+    'de-DE': 'Deutsch (Deutschland)',
   };
 
   const state = {
