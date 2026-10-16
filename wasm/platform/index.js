@@ -86,6 +86,7 @@ var repeatTimeout = null; // Flag indicating whether the repeat timeout is set, 
 var navigationTimeout = null; // Flag indicating whether the navigation timeout is set, initial value is null
 const BUILD_TYPE = '__BUILD_TYPE__'; // Placeholder for build type, which should be replaced during the build process
 const BUILD_COMMIT = '__BUILD_COMMIT__'; // Placeholder for build commit, which should be replaced during the build process
+const OFFICIAL_RELEASE = '__OFFICIAL_RELEASE__' === 'true'; // Only stable GitHub Releases set this flag
 const REPO_OWNER = '__REPO_OWNER__'; // Placeholder for repository owner, which should be replaced during the build process
 const REPO_NAME = '__REPO_NAME__'; // Placeholder for repository name, which should be replaced during the build process
 var _smartHubLocalMessagePort = null; // Local message port for receiving messages from the Smart Hub service
@@ -411,14 +412,13 @@ function checkForceGMVariant() {
   return false;
 }
 
-// Formats the build version string based on the build type and commit information
+// Formats the build version and marks all builds outside official stable releases as experimental
 function getBuildVersion(version) {
-  // Append pre-release identifier and short commit SHA to the version number for development builds
+  var versionLabel = OFFICIAL_RELEASE ? version : `${version} EXPERIMENTAL`;
   if (BUILD_TYPE === 'development' && BUILD_COMMIT) {
-    return `${version} (pre-${BUILD_COMMIT})`;
+    return `${versionLabel} (pre-${BUILD_COMMIT})`;
   }
-  // Return only the version number without any additional metadata for release builds
-  return version;
+  return versionLabel;
 }
 
 // Handles repeated execution of the current action based on a specified interval
@@ -4423,31 +4423,25 @@ function initSamsungKeys() {
 function initSpecialKeys() {
   console.log('%c[index.js, initSpecialKeys]', 'color: green;', 'Initializing special TV input keys...');
 
-  // Find the video element that displays the streaming session
-  var videoElement = document.getElementById('wasm_module');
-
-  // Listen for keydown events on the video element
-  videoElement.addEventListener('keydown', function(e) {
-    if (e.key === 'XF86Back' && isInGame === true) {
-      sendEscapeKeyToHost();
-      videoElement.dispatchEvent(new MouseEvent('mousedown', {
-        bubbles: true, cancelable: true, view: window, clientX: 0, clientY: 0
-      }));
-    }
-  });
-
-  // Capture media keys before the streaming session and suppress the TV's default action.
+  // Capture Back and media keys before the streaming session and suppress the TV's default action.
   ['keydown', 'keyup'].forEach(function(eventType) {
     window.addEventListener(eventType, function(e) {
-      if (typeof tvKey === 'undefined' || !isInGame) return;
-      if (e.keyCode === tvKey.KEY_PLAY_PAUSE ||
-          e.keyCode === tvKey.KEY_PAUSE ||
-          e.keyCode === tvKey.KEY_PLAY) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === 'keydown' && !e.repeat) {
-          toggleStreamMenuDialog();
-        }
+      if (!isInGame) return;
+
+      var isBackKey = e.key === 'XF86Back' ||
+        (typeof tvKey !== 'undefined' &&
+          (e.keyCode === tvKey.KEY_RETURN || e.keyCode === tvKey.KEY_BACK));
+      var isMediaKey = typeof tvKey !== 'undefined' &&
+        (e.keyCode === tvKey.KEY_PLAY_PAUSE ||
+         e.keyCode === tvKey.KEY_PAUSE ||
+         e.keyCode === tvKey.KEY_PLAY);
+
+      if (!isBackKey && !isMediaKey) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.type === 'keydown' && !e.repeat) {
+        toggleStreamMenuDialog();
       }
     }, true);
   });
