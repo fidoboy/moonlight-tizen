@@ -969,7 +969,7 @@ body {
     letter-spacing: 0.5px;
     text-indent: 36px;
 }
-#selectResolution, #selectFramerate, #selectBitrate, #framePacingBtn, #selectLanguage, #ipAddressFieldModeBtn,
+#selectResolution, #selectFramerate, #selectBitrate, #framePacingBtn, #selectLanguage, #ipAddressFieldModeBtn, #showConfigSummaryBtn,
 #sortAppsListBtn, #optimizeGamesBtn, #quitAppAfterDisconnectBtn, #removeAllHostsBtn, #rumbleFeedbackBtn, #mouseEmulationBtn,
 #flipABfaceButtonsBtn, #flipXYfaceButtonsBtn, #selectAudioBackend, #selectAudio, #ac3AudioModeBtn, #audioSyncBtn,
 #selectAudioJitter, #playHostAudioBtn, #decryptHostAudioBtn,
@@ -1101,7 +1101,8 @@ body {
 #continueExitApp:focus, #cancelExitApp:hover, #cancelExitApp:focus, #settingsBtn:hover, #settingsBtn:focus, #supportBtn:hover, #supportBtn:focus,
 #goBackBtn:hover, #goBackBtn:focus, #restoreDefaultsBtn:hover, #restoreDefaultsBtn:focus, #quitRunningAppBtn:hover, #quitRunningAppBtn:focus,
 #selectResolution:hover, #selectResolution:focus, #selectFramerate:hover, #selectFramerate:focus, #selectBitrate:hover, #selectBitrate:focus,
-#framePacingBtn:hover, #framePacingBtn:focus, #selectLanguage:hover, #selectLanguage:focus, #ipAddressFieldModeBtn:hover, #ipAddressFieldModeBtn:focus, #sortAppsListBtn:hover,
+#framePacingBtn:hover, #framePacingBtn:focus, #selectLanguage:hover, #selectLanguage:focus, #ipAddressFieldModeBtn:hover, #ipAddressFieldModeBtn:focus,
+#showConfigSummaryBtn:hover, #showConfigSummaryBtn:focus, #sortAppsListBtn:hover,
 #sortAppsListBtn:focus, #optimizeGamesBtn:hover, #optimizeGamesBtn:focus, #quitAppAfterDisconnectBtn:hover, #quitAppAfterDisconnectBtn:focus, #removeAllHostsBtn:hover, #removeAllHostsBtn:focus, #rumbleFeedbackBtn:hover,
 #rumbleFeedbackBtn:focus, #mouseEmulationBtn:hover, #mouseEmulationBtn:focus, #flipABfaceButtonsBtn:hover, #flipABfaceButtonsBtn:focus,
 #flipXYfaceButtonsBtn:hover, #flipXYfaceButtonsBtn:focus, #selectAudioBackend:hover, #selectAudioBackend:focus, #selectAudio:hover,
