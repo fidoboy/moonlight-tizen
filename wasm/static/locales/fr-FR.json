@@ -374,6 +374,7 @@
   "Something went wrong on your host PC when starting the stream. Restart your host PC and try again.": "Une erreur s’est produite sur le PC hôte au démarrage de la diffusion. Redémarrez-le et réessayez.",
   "An issue occurred on your host PC while starting the stream. Make sure you don't have any DRM-protected content open on your host PC.": "Un problème est survenu sur le PC hôte au démarrage de la diffusion. Vérifiez qu’aucun contenu protégé par DRM n’est ouvert.",
   "The host PC reported a fatal video encoding error. Try disabling HDR mode, changing the streaming resolution, or changing your host PC's display resolution.": "Le PC hôte a signalé une erreur fatale d’encodage vidéo. Essayez de désactiver le HDR, de modifier la résolution de diffusion ou la résolution d’écran du PC hôte.",
+  "The TV was unable to start the streaming with the selected video settings. Try reducing the resolution or frame rate and consider changing the codec.": "Le téléviseur n’a pas pu démarrer la diffusion avec les paramètres vidéo sélectionnés. Essayez de réduire la résolution ou la fréquence d’images, ou de changer de codec.",
   "Connection terminated": "Connexion terminée",
   "Mouse emulation is activated": "L’émulation de la souris est activée",
   "Mouse emulation is deactivated": "L’émulation de la souris est désactivée",
