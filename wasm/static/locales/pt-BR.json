@@ -386,5 +386,13 @@
   "Quit host app on disconnect": "Fechar o aplicativo do host ao desconectar",
   "- When enabled, Moonlight attempts to quit the app running on the host after a normal disconnection. Unexpected connection failures do not trigger this option.": "- Quando ativado, o Moonlight tenta fechar o aplicativo em execução no host após uma desconexão normal. Falhas inesperadas de conexão não acionam esta opção.",
   "Automatically quit the running app on the host": "Fechar automaticamente o aplicativo em execução no host",
-  "Could not automatically quit the host app.": "Não foi possível fechar automaticamente o aplicativo do host."
+  "Could not automatically quit the host app.": "Não foi possível fechar automaticamente o aplicativo do host.",
+  "Resolution": "Resolução",
+  "FPS": "FPS",
+  "Bitrate": "Taxa de bits",
+  "Optimal bitrate": "Taxa de bits ideal",
+  "HDR": "HDR",
+  "Codec": "Codec",
+  "Dolby": "Dolby",
+  "Audio": "Áudio"
 }
