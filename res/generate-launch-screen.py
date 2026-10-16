@@ -57,22 +57,23 @@ def interpolate(start, end, progress):
     return start + (end - start) * smoothstep(progress)
 
 
-def ease_out_quint(progress):
-    """Move most of the deceleration early, then ease smoothly toward zero."""
+def smootherstep(progress):
+    """Quintic easing with a gentle start and a gentle, gradual finish."""
     progress = max(0.0, min(1.0, progress))
-    return 1.0 - (1.0 - progress) ** 5
+    return progress ** 3 * (progress * (progress * 6.0 - 15.0) + 10.0)
 
 
 def star_speed_for_frame(frame_number):
-    """Keep full warp speed during logo-sector reveal, then settle with the logo."""
+    """Decelerate across the full settling phase and reach zero smoothly with the logo."""
     if frame_number < SECTOR_PHASE_FRAMES:
         return STAR_SPEED
 
     settle_frame = frame_number - SECTOR_PHASE_FRAMES
     progress = min(1.0, (settle_frame + 1) / SETTLE_FRAMES)
-    # The star velocity falls as (1 - progress)^5: a quick initial slowdown
-    # with a soft tail to a complete stop as the app name finishes appearing.
-    return STAR_SPEED * (1.0 - ease_out_quint(progress))
+    # Interpolate the loss of speed using quintic smootherstep. This avoids
+    # dropping almost all velocity early; motion remains perceptible through
+    # the logo/text reveal, then eases gently into a complete stop.
+    return STAR_SPEED * (1.0 - smootherstep(progress))
 
 
 class Star:
