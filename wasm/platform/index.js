@@ -4844,6 +4844,7 @@ function loadHTTPCertsCb() {
           console.info('%c[index.js, loadHTTPCertsCb]', 'color: green;', 'Generated new certificate: ', cert);
         }, function(failedCert) {
           console.error('%c[index.js, loadHTTPCertsCb]', 'color: green;', 'Error: Failed to generate a new certificate! Returned error was: \n', failedCert + '!');
+          if (_directSmartHubLaunch) directSmartHubLaunchFailure('Moonlight could not initialize its streaming credentials.');
         }).then(function(ret) {
           sendMessage('httpInit', [pairingCert.cert, pairingCert.privateKey, myUniqueid]).then(function(ret) {
             isStartupHttpReady = true;
@@ -4851,6 +4852,7 @@ function loadHTTPCertsCb() {
             else maybeRestoreUiAfterStartup();
           }, function(failedInit) {
             console.error('%c[index.js, loadHTTPCertsCb]', 'color: green;', 'Error: Failed HTTP initialization! Returned error was: ', failedInit + '!');
+            if (_directSmartHubLaunch) directSmartHubLaunchFailure('Moonlight could not initialize its streaming connection.');
           });
         });
       } else {
@@ -4860,6 +4862,7 @@ function loadHTTPCertsCb() {
           else maybeRestoreUiAfterStartup();
         }, function(failedInit) {
           console.error('%c[index.js, loadHTTPCertsCb]', 'color: green;', 'Error: Failed HTTP initialization! Returned error was: ', failedInit + '!');
+            if (_directSmartHubLaunch) directSmartHubLaunchFailure('Moonlight could not initialize its streaming connection.');
         });
       }
 
