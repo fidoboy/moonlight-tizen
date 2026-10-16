@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/moonlight-tizen-banner.svg" alt="Moonlight for Tizen with Dolby Digital" width="100%" />
+</p>
+
 # Moonlight Tizen with AC-3 support
 
 [![Release Version](https://img.shields.io/github/v/release/fidoboy/moonlight-tizen-ac3?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen-ac3/releases)
@@ -10,7 +14,7 @@ This repository is an **independently maintained project derived from** [Brightc
 
 > [!IMPORTANT]
 >
-> ## Main purpose: Dolby Digital audio over optical output
+> ## Main purpose: <img src="docs/assets/dolby-double-d.svg" alt="Dolby double-D symbol" width="26" height="26" /> Dolby Digital audio over optical output
 >
 > The principal reason for this independent project is optional **AC-3 (Dolby Digital) and E-AC-3 (Dolby Digital Plus) passthrough** for compatible Samsung Smart TVs connected over optical (TOSLINK) to a receiver or sound system that supports the selected Dolby format. When the host and playback path support it, the client passes the compressed audio stream to Tizen's native EMSS audio renderer, allowing **stereo or 5.1 surround sound** over a supported optical setup.
 >
@@ -22,6 +26,9 @@ This repository is an **independently maintained project derived from** [Brightc
 
 ### Other improvements in this project
 
+- **Faster Smart Hub app launching:** games and applications can now be launched directly from their Samsung Smart Hub shortcuts without loading Moonlight's full interface, significantly reducing startup time. Launching Moonlight from its own app icon retains the normal startup flow.
+- **Streaming configuration summary bar:** the Hosts and Apps screens show the current Moonlight streaming configuration at a glance, including resolution, frame rate, bitrate, HDR, video codec, Dolby audio, channel layout, and Game Mode.
+- **Remote-accessible Stream Menu:** press the TV remote's Play/Pause button while streaming to open the Stream Menu, which provides host keyboard shortcuts, performance-statistics controls, disconnect, and close-menu actions.
 - **Audio stream statistics:** shows the negotiated audio codec, channel layout, channel count, and approximate audio bitrate alongside the existing video and performance statistics.
 - **Spanish localization:** adds the es-ES locale and translations for the interface, including the new settings and audio statistics.
 - **Quit host app on disconnect:** an optional setting requests that the running host application quit after a normal disconnection; unexpected connection failures do not trigger it.
