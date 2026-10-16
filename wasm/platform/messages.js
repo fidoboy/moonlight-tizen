@@ -305,7 +305,13 @@ function handleMessage(msg) {
     if (window._directSmartHubLaunch) {
       // Paint a minimal status message before exiting; do not restore the home UI.
       if (typeof window.setDirectSmartHubStatus === 'function') {
-        window.setDirectSmartHubStatus('Cerrando la transmisión...');
+        var directLaunchHostName = window._directSmartHubLaunch && window._directSmartHubLaunch.hostName;
+        if (!directLaunchHostName && window._directSmartHubHost) {
+          directLaunchHostName = window._directSmartHubHost.hostname;
+        }
+        window.setDirectSmartHubStatus(directLaunchHostName
+          ? 'Finalizando transmisión con ' + directLaunchHostName + '...'
+          : 'Cerrando la transmisión...');
       }
       var shouldQuitDirectHostApp = errorCode === 0 &&
         $('#quitAppAfterDisconnectSwitch').parent().hasClass('is-checked');

@@ -4892,6 +4892,8 @@ function loadHTTPCertsCb() {
           hosts = {};
           hosts[targetUID] = directHost;
           _directSmartHubHost = directHost;
+          // The saved host name is available without an extra network request.
+          updateDirectSmartHubStartingStatus(directHost.hostname);
           _directSmartHubHostReady = true;
           isHostsLoaded = true;
           maybeStartDirectSmartHubLaunch();
@@ -5279,17 +5281,22 @@ function setDirectSmartHubStatus(message) {
   statusElement.style.display = 'flex';
 }
 
+function updateDirectSmartHubStartingStatus(hostName) {
+  if (!_directSmartHubLaunch) return;
+  var appName = _directSmartHubLaunch.appName || 'aplicación';
+  var normalizedHostName = (typeof hostName === 'string') ? hostName.trim() : '';
+  setDirectSmartHubStatus('Iniciando ' + appName +
+    (normalizedHostName ? ' en ' + normalizedHostName : '') + '...');
+}
+
 function hideDirectSmartHubStatus() {
   var statusElement = document.getElementById('directSmartHubStatus');
   if (statusElement) statusElement.style.display = 'none';
 }
 
 if (_directSmartHubLaunch) {
-  // Keep the direct-launch path lightweight: only show one plain text status line,
-  // without restoring or initializing the normal Moonlight interface.
-  setDirectSmartHubStatus(_directSmartHubLaunch.appName
-    ? 'Iniciando ' + _directSmartHubLaunch.appName + '...'
-    : 'Iniciando aplicación...');
+  // Show the app immediately, then add the host name when the saved host is restored.
+  updateDirectSmartHubStartingStatus(null);
 }
 
 function directSmartHubLaunchFailure(message) {
