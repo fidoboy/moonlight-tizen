@@ -4462,13 +4462,31 @@ function loadSystemInfo() {
     console.log('%c[index.js, loadSystemInfo]', 'color: green;', 'TV Model Group: ' + (modelGroup ? modelGroup : 'Unknown'));
     console.log('%c[index.js, loadSystemInfo]', 'color: green;', '4K Panel: ' + (is4kPanel ? 'Yes' : 'No'));
     console.log('%c[index.js, loadSystemInfo]', 'color: green;', 'HDR Capable: ' + (isHdrCapable ? 'Yes' : 'No'));
-    // Insert the system information into the placeholder
-    systemInfoPlaceholder.innerText =
+    // Insert the system information as text, then render the experimental marker
+    // with the same shared badge class used by other experimental settings.
+    systemInfoPlaceholder.textContent =
       t('App Version: %1$s v%2$s', appInfo.name + (isForceGMVariant ? '-ForceGM' : ''), buildVer) + '\n' +
       t('Platform Version: Tizen %1$s', platformVer ? platformVer : t('Unknown')) + '\n' +
       t('TV Model Series: %1$s', modelSeries ? modelSeries : t('Unknown')) + '\n' +
       t('TV Model Name: %1$s', modelName ? modelName : t('Unknown')) + '\n' +
       t('TV Model Group: %1$s', modelGroup ? modelGroup : t('Unknown'));
+
+    if (!OFFICIAL_RELEASE && systemInfoPlaceholder.firstChild) {
+      const versionTextNode = systemInfoPlaceholder.firstChild;
+      const badgeIndex = versionTextNode.nodeValue.indexOf('EXPERIMENTAL');
+      if (badgeIndex !== -1) {
+        const beforeBadge = versionTextNode.nodeValue.slice(0, badgeIndex);
+        const afterBadge = versionTextNode.nodeValue.slice(badgeIndex + 'EXPERIMENTAL'.length);
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-experimental';
+        badge.textContent = 'EXPERIMENTAL';
+        const badgeFragment = document.createDocumentFragment();
+        badgeFragment.appendChild(document.createTextNode(beforeBadge));
+        badgeFragment.appendChild(badge);
+        badgeFragment.appendChild(document.createTextNode(afterBadge));
+        systemInfoPlaceholder.replaceChild(badgeFragment, versionTextNode);
+      }
+    }
   } else {
     console.error('%c[index.js, loadSystemInfo]', 'color: green;', 'Error: Failed to load system information!');
     systemInfoPlaceholder.innerText = t('Failed to load system information!');
