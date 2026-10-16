@@ -93,6 +93,14 @@ var _smartHubMessagePortListener = null; // Listener ID for the Smart Hub local 
 var _previewApps = {}; // Per-host app cache for Smart Hub Preview: {serverUid: {hostname, address, apps: [{id, title, imageUri}]}}
 var _isSmartHubSupported = false; // Flag indicating if Smart Hub Preview is supported on this device
 
+// Experimental direct launch state for Smart Hub app tiles.
+var _directSmartHubLaunch = null;
+var _directSmartHubHost = null;
+var _directSmartHubHostReady = false;
+var _directSmartHubSettingsReady = false;
+var _directSmartHubLaunchStarted = false;
+var _directSmartHubLaunchFailed = false;
+
 const REPEAT_DELAY = 350; // Repeat delay set to 350ms (milliseconds)
 const REPEAT_INTERVAL = 100; // Repeat interval set to 100ms (milliseconds)
 const ACTION_THRESHOLD = 0.5; // Threshold for initial navigation set to 0.5
@@ -363,6 +371,9 @@ function releaseNativeLaunchScreen(onReleased) {
 }
 
 function maybeRestoreUiAfterStartup() {
+  // A direct app-tile launch must never restore or navigate through the home UI.
+  if (_directSmartHubLaunch) return;
+
   // The stored host list is independent of the initial UI: render the interface as
   // soon as HTTP setup and localization are ready, and populate hosts asynchronously.
   if (!isStartupHttpReady || !isStartupLocaleReady || isStartupUiRestored) {
@@ -3023,6 +3034,7 @@ function handleOnScreenOverlays() {
 function startGame(host, appID) {
   if (!host || !host.paired) {
     console.error('%c[index.js, startGame]', 'color: green;', 'Error: Attempted to start a game, but the host was not initialized properly! Host object: ', host);
+    if (_directSmartHubLaunch) directSmartHubLaunchFailure(t('The selected host is no longer available on Moonlight.'));
     return;
   }
   localStorage.setItem('lastOpenedApp_' + host.serverUid, appID);
@@ -3166,6 +3178,10 @@ function startGame(host, appID) {
           var status_code = $root.attr('status_code');
           var status_message = $root.attr('status_message');
           if (status_code != 200) {
+            if (_directSmartHubLaunch) {
+              directSmartHubLaunchFailure(t('Error %1$s: %2$s', status_code, status_message));
+              return;
+            }
             $('#loadingSpinnerMessage').text('');
             snackbarLogLong('Error %1$s: %2$s', status_code, status_message);
             showApps(host).then(() => {
@@ -3186,6 +3202,10 @@ function startGame(host, appID) {
           ]);
         }, function(failedResumeApp) {
           console.error('%c[index.js, startGame]', 'color: green;', 'Error: Failed to resume app with id: ' + appID + '\n Returned error was: ' + failedResumeApp + '!');
+          if (_directSmartHubLaunch) {
+            directSmartHubLaunchFailure(t('Failed to resume %1$s', appToStart.title));
+            return;
+          }
           snackbarLog('Failed to resume %1$s', appToStart.title);
           showApps(host).then(() => {
             // Scroll to the current game row
@@ -3213,6 +3233,10 @@ function startGame(host, appID) {
         var status_code = $root.attr('status_code');
         var status_message = $root.attr('status_message');
         if (status_code != 200) {
+          if (_directSmartHubLaunch) {
+            directSmartHubLaunchFailure(t('Error %1$s: %2$s', status_code, status_message));
+            return;
+          }
           if (status_code == 4294967295 && status_message == 'Invalid') {
             // Special case handling an audio capture error which GFE doesn't provide any useful status message
             status_code = 418;
@@ -3238,6 +3262,10 @@ function startGame(host, appID) {
         ]);
       }, function(failedLaunchApp) {
         console.error('%c[index.js, startGame]', 'color: green;', 'Error: Failed to launch app with id: ' + appID + '\n Returned error was: ' + failedLaunchApp + '!');
+        if (_directSmartHubLaunch) {
+          directSmartHubLaunchFailure(t('Failed to launch %1$s', appToStart.title));
+          return;
+        }
         snackbarLog('Failed to launch %1$s', appToStart.title);
         showApps(host).then(() => {
           // Scroll to the current game row
@@ -4776,6 +4804,9 @@ function loadUserDataCb() {
     } else {
       document.querySelector('#performanceStatsBtn').MaterialSwitch.on();
     }
+
+    _directSmartHubSettingsReady = true;
+    maybeStartDirectSmartHubLaunch();
   });
 }
 
@@ -4810,7 +4841,8 @@ function loadHTTPCertsCb() {
         }).then(function(ret) {
           sendMessage('httpInit', [pairingCert.cert, pairingCert.privateKey, myUniqueid]).then(function(ret) {
             isStartupHttpReady = true;
-            maybeRestoreUiAfterStartup();
+            if (_directSmartHubLaunch) maybeStartDirectSmartHubLaunch();
+            else maybeRestoreUiAfterStartup();
           }, function(failedInit) {
             console.error('%c[index.js, loadHTTPCertsCb]', 'color: green;', 'Error: Failed HTTP initialization! Returned error was: ', failedInit + '!');
           });
@@ -4818,7 +4850,8 @@ function loadHTTPCertsCb() {
       } else {
         sendMessage('httpInit', [pairingCert.cert, pairingCert.privateKey, myUniqueid]).then(function(ret) {
           isStartupHttpReady = true;
-          maybeRestoreUiAfterStartup();
+          if (_directSmartHubLaunch) maybeStartDirectSmartHubLaunch();
+          else maybeRestoreUiAfterStartup();
         }, function(failedInit) {
           console.error('%c[index.js, loadHTTPCertsCb]', 'color: green;', 'Error: Failed HTTP initialization! Returned error was: ', failedInit + '!');
         });
@@ -4826,6 +4859,35 @@ function loadHTTPCertsCb() {
 
       // load previously connected hosts, which have been killed into an object, and revive them back into a class
       getData('hosts', function(previousValue) {
+        if (_directSmartHubLaunch) {
+          var savedHosts = previousValue.hosts != null ? previousValue.hosts : {};
+          var targetUID = _directSmartHubLaunch.serverUid;
+          var savedHost = savedHosts[targetUID];
+          if (!savedHost) {
+            isHostsLoaded = true;
+            directSmartHubLaunchFailure(t('The selected host is no longer available on Moonlight.'));
+            return;
+          }
+          var directHost = new NvHTTP(savedHost.address, myUniqueid, savedHost.userEnteredAddress, savedHost.macAddress);
+          Object.assign(directHost, savedHost);
+          directHost._memCachedApplist = null;
+          directHost.httpPort = savedHost.httpPort || ((savedHost.httpsPort || 47984) + 5);
+          directHost.httpsPort = savedHost.httpsPort || (directHost.httpPort - 5);
+          directHost.externalPort = savedHost.externalPort || directHost.httpPort;
+          directHost.serverUid = savedHost.serverUid || targetUID;
+          directHost.externalIP = savedHost.externalIP;
+          directHost.hostname = savedHost.hostname;
+          directHost.ppkstr = savedHost.ppkstr;
+          directHost.autoWolEnabled = savedHost.autoWolEnabled || false;
+          hosts = {};
+          hosts[targetUID] = directHost;
+          _directSmartHubHost = directHost;
+          _directSmartHubHostReady = true;
+          isHostsLoaded = true;
+          maybeStartDirectSmartHubLaunch();
+          return;
+        }
+
         hosts = previousValue.hosts != null ? previousValue.hosts : {};
         for (var hostUID in hosts) { // Programmatically add each new host
           var revivedHost = new NvHTTP(hosts[hostUID].address, myUniqueid, hosts[hostUID].userEnteredAddress, hosts[hostUID].macAddress);
@@ -5173,6 +5235,67 @@ function updatePreviewData() {
   }
 }
 
+function getSmartHubLaunchPayload() {
+  try {
+    var requested = tizen.application.getCurrentApplication().getRequestedAppControl();
+    var data = requested && requested.appControl && requested.appControl.data;
+    if (!data || !Array.isArray(data)) return null;
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].key !== 'PAYLOAD' || !data[i].value || !data[i].value.length) continue;
+      var payload = JSON.parse(data[i].value[0]);
+      var actionData = JSON.parse(payload.values);
+      if (actionData && actionData.serverUid && actionData.appId !== null && actionData.appId !== undefined) {
+        return { serverUid: String(actionData.serverUid), appId: actionData.appId };
+      }
+    }
+  } catch (error) {
+    console.warn('%c[index.js, getSmartHubLaunchPayload]', 'color: gray;', 'Could not read Smart Hub launch payload:', error);
+  }
+  return null;
+}
+
+// Capture before WebAssembly can begin host initialization.
+_directSmartHubLaunch = getSmartHubLaunchPayload();
+
+function directSmartHubLaunchFailure(message) {
+  if (!_directSmartHubLaunch || _directSmartHubLaunchFailed) return;
+  _directSmartHubLaunchFailed = true;
+  console.error('%c[index.js, directSmartHubLaunchFailure]', 'color: red;', message);
+  window.setTimeout(function() {
+    try {
+      window.alert(message || 'Unable to launch the selected app.');
+    } catch (error) {
+      console.error('%c[index.js, directSmartHubLaunchFailure]', 'color: red;', 'Could not display launch error:', error);
+    } finally {
+      try { tizen.application.getCurrentApplication().exit(); }
+      catch (error) { console.error('%c[index.js, directSmartHubLaunchFailure]', 'color: red;', 'Could not exit Moonlight:', error); }
+    }
+  }, 0);
+}
+
+function maybeStartDirectSmartHubLaunch() {
+  if (!_directSmartHubLaunch || _directSmartHubLaunchStarted || _directSmartHubLaunchFailed ||
+      !_directSmartHubHostReady || !_directSmartHubSettingsReady || !isStartupHttpReady) return;
+  _directSmartHubLaunchStarted = true;
+  var host = _directSmartHubHost;
+  if (!host || !host.paired) {
+    directSmartHubLaunchFailure(t('The selected host is no longer available on Moonlight.'));
+    return;
+  }
+  console.log('%c[index.js, maybeStartDirectSmartHubLaunch]', 'color: green;', 'Checking selected host and launching app ' + _directSmartHubLaunch.appId + ' directly.');
+  host.pollServer(function(returnedHost) {
+    if (_directSmartHubLaunchFailed) return;
+    if (!returnedHost || !returnedHost.online) {
+      directSmartHubLaunchFailure(t('Failed to connect to %1$s. Ensure Sunshine is running on your host PC or GameStream is enabled in GeForce Experience SHIELD settings.', host.hostname || t('the host')));
+      return;
+    }
+    host.online = true;
+    api = host;
+    localStorage.setItem('lastOpenedHost', host.serverUid);
+    startGame(host, _directSmartHubLaunch.appId);
+  });
+}
+
 function probeSmartHubSupport() {
   return new Promise(function(resolve) {
     // Check localStorage cache first
@@ -5235,15 +5358,23 @@ function probeSmartHubSupport() {
 
 function onWindowLoad() {
   console.log('%c[index.js, onWindowLoad]', 'color: green;', 'Moonlight\'s main window loaded.');
-
   initSamsungKeys();
   initSpecialKeys();
   loadUserData();
 
+  if (_directSmartHubLaunch) {
+    console.log('%c[index.js, onWindowLoad]', 'color: green;', 'Direct Smart Hub app launch detected: ' + JSON.stringify(_directSmartHubLaunch));
+    try {
+      if (window.screen && typeof window.screen.show === 'function') window.screen.show();
+    } catch (error) {
+      console.warn('%c[index.js, onWindowLoad]', 'color: gray;', 'Could not dismiss native launch screen early:', error);
+    }
+    return;
+  }
+
+  // Keep the standard Moonlight icon launch path unchanged.
   probeSmartHubSupport().then(function() {
-    // Handle deep links from Smart Hub Preview tile clicks (initial launch)
     handleDeepLink();
-    // Also handle deep links when the app is brought to the foreground via Smart Hub
     window.addEventListener('appcontrol', handleDeepLink);
   });
 }
