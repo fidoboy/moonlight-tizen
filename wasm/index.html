@@ -33,7 +33,8 @@
       justify-content: center;
       box-sizing: border-box;
       padding: 4vw;
-      background: #000;
+      /* Never obscure the stream if a platform event is missed. */
+      background: transparent;
       color: #fff;
       font-family: Arial, sans-serif;
       font-size: 28px;
