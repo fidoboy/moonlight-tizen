@@ -3048,8 +3048,8 @@ function startGame(host, appID) {
 
   // Refresh the server info, because the user might have quit the game
   host.refreshServerInfo().then(function(ret) {
-    host.getAppById(appID).then(function(appToStart) {
-      if (host.currentGame != 0 && host.currentGame != appID) {
+    (_directSmartHubLaunch ? Promise.resolve({ id: appID, title: String(appID) }) : host.getAppById(appID)).then(function(appToStart) {
+      if (!_directSmartHubLaunch && host.currentGame != 0 && host.currentGame != appID) {
         host.getAppById(host.currentGame).then(function(currentApp) {
           // Find the existing overlay and dialog elements
           var quitAppOverlay = document.querySelector('#quitAppDialogOverlay');
