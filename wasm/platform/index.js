@@ -5258,7 +5258,7 @@ function getSmartHubLaunchPayload() {
         return {
           serverUid: String(actionData.serverUid),
           appId: actionData.appId,
-          appName: String(actionData.appName || actionData.appTitle || actionData.title || actionData.name || actionData.appId)
+          appName: actionData.appName || actionData.appTitle || actionData.title || actionData.name || null
         };
       }
     }
@@ -5287,7 +5287,9 @@ function hideDirectSmartHubStatus() {
 if (_directSmartHubLaunch) {
   // Keep the direct-launch path lightweight: only show one plain text status line,
   // without restoring or initializing the normal Moonlight interface.
-  setDirectSmartHubStatus('Iniciando ' + _directSmartHubLaunch.appName + '...');
+  setDirectSmartHubStatus(_directSmartHubLaunch.appName
+    ? 'Iniciando ' + _directSmartHubLaunch.appName + '...'
+    : 'Iniciando aplicación...');
 }
 
 function directSmartHubLaunchFailure(message) {
