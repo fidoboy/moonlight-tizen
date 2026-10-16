@@ -442,23 +442,13 @@ function handleMessage(msg) {
     $('#connection-warnings').css('background', 'rgba(0, 0, 0, 0.5)');
     $('#connection-warnings').text(translateBackendMessage(msg.replace('WarningMsg: ', '')));
   } else if (msg.indexOf('NoStatMsg: ') === 0) {
-    // Toggle the performance stats switch and save the state
-    if ($('#performanceStatsSwitch').prop('checked')) {
-      $('#performanceStatsBtn')[0].MaterialSwitch.off();
-      savePerformanceStats();
-      $('#performance-stats').css('display', 'none');
-    }
-    // Hide the performance statistics overlay
+    // Hide the overlay for this streaming session without changing the saved preference.
+    $('#performance-stats').css('display', 'none');
     $('#performance-stats').css('background', 'transparent');
     $('#performance-stats').text('');
   } else if (msg.indexOf('StatMsg: ') === 0) {
-    // Toggle the performance stats switch and save the state
-    if (!$('#performanceStatsSwitch').prop('checked')) {
-      $('#performanceStatsBtn')[0].MaterialSwitch.on();
-      savePerformanceStats();
-      $('#performance-stats').css('display', 'inline-block');
-    }
-    // Show the performance statistics overlay
+    // Show the overlay for this streaming session without changing the saved preference.
+    $('#performance-stats').css('display', 'inline-block');
     $('#performance-stats').css('background', 'rgba(0, 0, 0, 0.5)');
     $('#performance-stats').text(translateBackendMessage(msg.replace('StatMsg: ', '')));
   } else if (msg.indexOf('controllerRumble: ') === 0) {

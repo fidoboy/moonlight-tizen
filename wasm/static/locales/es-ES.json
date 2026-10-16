@@ -172,7 +172,6 @@
   "RETURN": "RETORNO",
   "ESC": "ESC",
   "B": "B",
-  "— Return to the previous view, close any active menu or dialog, cancel the operation, exit the application with confirmation, and click the right mouse button in emulation.": "— Volver a la vista anterior, cerrar menús o diálogos, cancelar la operación, salir de la aplicación previa confirmación y hacer clic con el botón derecho del ratón emulado.",
   "LEFT BUMPER": "BOTÓN SUPERIOR IZQUIERDO",
   "— Click the left mouse button in emulation.": "— Hacer clic con el botón izquierdo del ratón emulado.",
   "RIGHT BUMPER": "BOTÓN SUPERIOR DERECHO",
@@ -395,5 +394,6 @@
   "Codec": "Códec",
   "Dolby": "Dolby",
   "Audio": "Audio",
-  "Game mode summary": "Modo juego"
+  "Game mode summary": "Modo juego",
+  "— Return to the previous view, close any active menu or dialog, or cancel the operation. While streaming, open or close the stream menu instead. Exit the application with confirmation, and click the right mouse button in emulation.": "— Volver a la vista anterior, cerrar menús o diálogos activos o cancelar la operación. Durante la retransmisión, abrir o cerrar el menú de retransmisión en su lugar. Salir de la aplicación previa confirmación y hacer clic con el botón derecho del ratón emulado."
 }
