@@ -415,8 +415,10 @@ function handleMessage(msg) {
     warningDialog(t('Connection Error'), translateBackendMessage(msg.replace('DialogMsg: ', '')));
   } else if (msg === 'displayVideo') {
     // Hide the lightweight direct-launch status once the stream video is ready.
-    if (window._directSmartHubLaunch && typeof window.hideDirectSmartHubStatus === 'function') {
-      window.hideDirectSmartHubStatus();
+    if (window._directSmartHubLaunch) {
+      // Use direct DOM access for compatibility with older Tizen WebKit engines.
+      var directStatusElement = document.getElementById('directSmartHubStatus');
+      if (directStatusElement) directStatusElement.style.display = 'none';
     }
     // Show the video stream now
     $('#listener').addClass('fullscreen');
