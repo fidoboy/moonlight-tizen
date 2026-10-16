@@ -1,8 +1,8 @@
-// The native splash video contains a 3.6-second animation followed by a 6-second
+// The native splash video contains a 3.6-second animation followed by a 5-second
 // static frame. Keep a deadline as a lower bound, and also give the restored UI
 // a safety window before dismissing the native screen.
 const NATIVE_SPLASH_ANIMATION_DURATION_MS = 3600;
-const NATIVE_SPLASH_FINAL_HOLD_MS = 6000;
+const NATIVE_SPLASH_FINAL_HOLD_MS = 5000;
 const NATIVE_SPLASH_MIN_RELEASE_AT = Date.now() + NATIVE_SPLASH_ANIMATION_DURATION_MS + NATIVE_SPLASH_FINAL_HOLD_MS;
 const NATIVE_SPLASH_HOLD_AFTER_UI_READY_MS = 5000;
 
