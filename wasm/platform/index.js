@@ -5432,7 +5432,19 @@ function updateConfigSummaryBar() {
     output.classList.toggle('is-off', !enabled);
   }
 
-  var resolution = textFor('#selectResolution', '1280:720').replace(':', ' × ');
+  var resolution = textFor('#selectResolution', '1280:720')
+    .replace(/[:×]/g, 'x')
+    .replace(/\s+/g, '');
+  var resolutionNames = {
+    '1280x720': 'HD',
+    '1920x1080': 'HD',
+    '2560x1440': '2K',
+    '3840x2160': '4K',
+    '7680x4320': '8K'
+  };
+  if (resolutionNames[resolution]) {
+    resolution += ' (' + resolutionNames[resolution] + ')';
+  }
   var fps = textFor('#selectFramerate', '60');
   fps = /fps/i.test(fps) ? fps : fps + ' FPS';
   var bitrate = textFor('#selectBitrate', '10 Mbps');
