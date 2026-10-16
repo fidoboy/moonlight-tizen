@@ -209,6 +209,7 @@ function attachListeners() {
   $('#bitrateSlider').on('input', saveBitrate);
   $('#framePacingSwitch').on('click', saveFramePacing);
   $('#ipAddressFieldModeSwitch').on('click', saveIpAddressFieldMode);
+  $('#showConfigSummarySwitch').on('click', saveConfigSummaryVisibility);
   $('#ipAddressTextInput').on('input', updateIpAddressInputValidationState);
   $('#sortAppsListSwitch').on('click', saveSortAppsList);
   $('#optimizeGamesSwitch').on('click', saveOptimizeGames);
@@ -3834,6 +3835,15 @@ function saveIpAddressFieldMode() {
   }, 100);
 }
 
+function saveConfigSummaryVisibility() {
+  setTimeout(() => {
+    const enabled = $('#showConfigSummarySwitch').parent().hasClass('is-checked');
+    console.log('%c[index.js, saveConfigSummaryVisibility]', 'color: green;', 'Saving configuration summary bar visibility: ' + enabled);
+    storeData('showConfigSummaryBar', enabled, null);
+    updateConfigSummaryBar();
+  }, 100);
+}
+
 function saveSortAppsList() {
   setTimeout(() => {
     const chosenSortAppsList = $('#sortAppsListSwitch').parent().hasClass('is-checked');
@@ -4282,6 +4292,11 @@ function restoreDefaultsSettingsValues() {
   document.querySelector('#ipAddressFieldModeBtn').MaterialSwitch.off();
   storeData('ipAddressFieldMode', defaultIpAddressFieldMode, null);
 
+  const defaultShowConfigSummaryBar = true;
+  document.querySelector('#showConfigSummaryBtn').MaterialSwitch.on();
+  storeData('showConfigSummaryBar', defaultShowConfigSummaryBar, null);
+  updateConfigSummaryBar();
+
   const defaultSortAppsList = false;
   document.querySelector('#sortAppsListBtn').MaterialSwitch.off();
   storeData('sortAppsList', defaultSortAppsList, null);
@@ -4582,6 +4597,19 @@ function loadUserDataCb() {
     }
     // Handle the IP address field visibility based on switch state
     handleIpAddressFieldMode();
+  });
+
+  console.log('%c[index.js, loadUserDataCb]', 'color: green;', 'Load configuration summary bar visibility preference.');
+  getData('showConfigSummaryBar', function(previousValue) {
+    const storedValue = previousValue.showConfigSummaryBar;
+    const enabled = storedValue == null || storedValue === true ||
+      storedValue === 'true' || storedValue === 1;
+    if (enabled) {
+      document.querySelector('#showConfigSummaryBtn').MaterialSwitch.on();
+    } else {
+      document.querySelector('#showConfigSummaryBtn').MaterialSwitch.off();
+    }
+    updateConfigSummaryBar();
   });
 
   console.log('%c[index.js, loadUserDataCb]', 'color: green;', 'Load stored sortAppsList preferences.');
@@ -5421,7 +5449,9 @@ function updateConfigSummaryBar() {
   // The strip belongs only to the Hosts and Apps grids, never to Settings or streaming.
   var onHostsScreen = isVisible(document.getElementById('host-grid'));
   var onAppsScreen = isVisible(document.getElementById('game-grid'));
-  var desiredDisplay = (onHostsScreen || onAppsScreen) &&
+  var visibilitySwitch = document.getElementById('showConfigSummarySwitch');
+  var summaryEnabled = !visibilitySwitch || visibilitySwitch.checked;
+  var desiredDisplay = summaryEnabled && (onHostsScreen || onAppsScreen) &&
     !isVisible(document.getElementById('settings-list')) ? 'flex' : 'none';
   if (bar.style.display !== desiredDisplay) bar.style.display = desiredDisplay;
 
