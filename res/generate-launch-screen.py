@@ -31,13 +31,18 @@ BOUNCE_HIGH_SCALE = FINAL_LOGO_SCALE * 1.06
 LOGO_CENTER_X = 639.84
 LOGO_CENTER_Y = 274.84
 
-# Starfield parameters ported from the supplied canvas animation.
+# Starfield warp parameters.
 FRAME_WIDTH = 1280
 FRAME_HEIGHT = 720
 STAR_COUNT = 1000
 STAR_SPEED = 25.0
-STAR_SPEED_PEAK_MULTIPLIER = 1.20  # Brief early peak near 30 for a stronger warp effect.
-STAR_ACCELERATION_FRACTION = 0.10  # Use the first 10% of the logo animation to reach that peak.
+STAR_SPEED_PEAK = 30.0
+STAR_ACCELERATION_FRAMES = 8  # Briefly ramp from 25 to 30, then start the logarithmic decay.
+STAR_DECEL_LOG_STRENGTH = 2.5  # Smaller values preserve more speed in the long tail.
+STAR_TRAIL_MAX_LENGTH = 82.0
+STAR_TRAIL_RADIAL_FRACTION = 0.18
+STAR_TRAIL_MAX_OPACITY = 0.30
+STAR_TRAIL_MIN_SPEED = 0.35
 MAX_STAR_DEPTH = 1500.0
 STAR_COLOR = "#FFFFFF"
 STARFIELD_SEED = 0x4D4F4F4E  # Keep the generated splash reproducible between builds.
@@ -60,25 +65,25 @@ def interpolate(start, end, progress):
 
 
 def star_speed_for_frame(frame_number):
-    """Build a forceful early warp, then ease the starfield into a soft stop with the logo."""
-    # Synchronize the speed curve with the entire logo reveal (3.6 seconds),
-    # rather than compressing all deceleration into the final 1.2 seconds.
-    progress = max(0.0, min(1.0, frame_number / (ANIMATED_FRAME_COUNT - 1)))
+    """Ramp into a strong warp, then follow a logarithmic curve with a long, gentle tail."""
+    if frame_number <= STAR_ACCELERATION_FRAMES:
+        progress = frame_number / STAR_ACCELERATION_FRAMES
+        return STAR_SPEED + (STAR_SPEED_PEAK - STAR_SPEED) * smoothstep(progress)
 
+    progress = (frame_number - STAR_ACCELERATION_FRAMES) / (
+        ANIMATED_FRAME_COUNT - 1 - STAR_ACCELERATION_FRAMES
+    )
+    progress = max(0.0, min(1.0, progress))
     if progress >= 1.0:
         return 0.0
 
-    # A small ease-in-style overshoot makes the stars accelerate briefly from
-    # speed 25 toward 30 at the start, before the sustained deceleration begins.
-    acceleration_progress = min(1.0, progress / STAR_ACCELERATION_FRACTION)
-    acceleration = 1.0 + (STAR_SPEED_PEAK_MULTIPLIER - 1.0) * math.sin(
-        acceleration_progress * math.pi / 2.0
-    ) ** 2
-
-    # A cosine envelope preserves motion for longer and has a zero slope at
-    # the end, avoiding a sudden last-frame brake. The logo/text animation
-    # itself is unchanged.
-    return STAR_SPEED * acceleration * math.cos(progress * math.pi / 2.0)
+    # Logarithmic decay slows progressively as it approaches zero. At three
+    # seconds the velocity is already low, so the final segment has a much
+    # gentler absolute slope and does not look like a last-second brake.
+    normalized_decay = math.log1p(STAR_DECEL_LOG_STRENGTH * progress) / math.log1p(
+        STAR_DECEL_LOG_STRENGTH
+    )
+    return STAR_SPEED_PEAK * (1.0 - normalized_decay)
 
 
 class Star:
@@ -112,8 +117,9 @@ class Star:
         if self.z <= 0.0:
             return None
 
-        x = ((self.x / self.z) * FRAME_WIDTH) / 2.0 + FRAME_WIDTH / 2.0
-        y = ((self.y / self.z) * FRAME_HEIGHT) / 2.0 + FRAME_HEIGHT / 2.0
+        # Rays must converge on the logo's own center, not the canvas center.
+        x = ((self.x / self.z) * FRAME_WIDTH) / 2.0 + LOGO_CENTER_X
+        y = ((self.y / self.z) * FRAME_HEIGHT) / 2.0 + LOGO_CENTER_Y
         radius = (1.0 - self.z / MAX_STAR_DEPTH) * self.size * 3.0
 
         # Canvas drawing clips anything outside the screen; skip those nodes here.
@@ -133,15 +139,54 @@ class StarField:
         for star in self.stars:
             star.update(speed)
 
-    def append_to_svg(self, root):
+    def append_to_svg(self, root, speed=0.0):
         group = ET.Element(f"{{{SVG_NS}}}g", {"id": "starfield"})
+        trails = ET.SubElement(group, f"{{{SVG_NS}}}g", {"id": "starfield-trails"})
+        points = ET.SubElement(group, f"{{{SVG_NS}}}g", {"id": "starfield-points"})
+
+        speed_ratio = min(1.0, max(0.0, speed / STAR_SPEED_PEAK))
+        if speed >= STAR_TRAIL_MIN_SPEED:
+            trail_opacity = STAR_TRAIL_MAX_OPACITY * speed_ratio ** 1.25
+            stroke_width = 0.60 + 0.35 * speed_ratio
+
         for star in self.stars:
             point = star.projected()
             if point is None:
                 continue
             x, y, radius = point
+
+            # Draw each faint trail inward from the bright star, so every
+            # streak points back toward the logo-centered vanishing point.
+            if speed >= STAR_TRAIL_MIN_SPEED:
+                dx = x - LOGO_CENTER_X
+                dy = y - LOGO_CENTER_Y
+                radial_distance = math.hypot(dx, dy)
+                trail_length = min(
+                    STAR_TRAIL_MAX_LENGTH,
+                    radial_distance * STAR_TRAIL_RADIAL_FRACTION,
+                ) * speed_ratio
+                if radial_distance > 1.0 and trail_length >= 0.65:
+                    tail_x = x - (dx / radial_distance) * trail_length
+                    tail_y = y - (dy / radial_distance) * trail_length
+                    ET.SubElement(
+                        trails,
+                        f"{{{SVG_NS}}}line",
+                        {
+                            "x1": f"{tail_x:.2f}",
+                            "y1": f"{tail_y:.2f}",
+                            "x2": f"{x:.2f}",
+                            "y2": f"{y:.2f}",
+                            "stroke": star.color,
+                            "stroke-width": f"{stroke_width:.2f}",
+                            "stroke-linecap": "round",
+                            "opacity": f"{trail_opacity:.4f}",
+                        },
+                    )
+
+            # The sharp point is drawn above all trails for a crisp starfield
+            # as the camera's forward motion slows down.
             ET.SubElement(
-                group,
+                points,
                 f"{{{SVG_NS}}}circle",
                 {
                     "cx": f"{x:.2f}",
@@ -152,7 +197,7 @@ class StarField:
             )
 
         # The first template child is the black full-canvas background. Insert
-        # the stars directly above it and below the unchanged logo/text layers.
+        # the trails and sharp star points below the unchanged logo/text layers.
         root.insert(1, group)
 
 
@@ -206,7 +251,7 @@ def render_svg(template_path, output_path, frame_number=None, starfield=None, st
     if starfield is not None:
         if frame_number is not None:
             starfield.update(star_speed)
-        starfield.append_to_svg(root)
+        starfield.append_to_svg(root, speed=star_speed)
     output_path.write_bytes(ET.tostring(root, encoding="utf-8", xml_declaration=True))
 
 
