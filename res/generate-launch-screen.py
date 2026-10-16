@@ -3,7 +3,7 @@
 
 Eight sectors fade in sequentially. The logo then makes a clear, controlled
 bounce while the gray disc and app name fade in; the final frame is held for
-six additional seconds so the completed logo remains readable on the TV.
+five additional seconds so the completed logo remains readable on the TV.
 """
 import argparse
 import math
@@ -21,7 +21,7 @@ SECTOR_FADE_FRAMES = 9      # 300 ms fade-in for each sector
 SECTOR_PHASE_FRAMES = 8 * SECTOR_INTERVAL_FRAMES
 SETTLE_FRAMES = 36          # 1.2 s for the bounce and accompanying fade
 ANIMATED_FRAME_COUNT = SECTOR_PHASE_FRAMES + SETTLE_FRAMES
-STATIC_HOLD_FRAMES = 6 * FPS
+STATIC_HOLD_FRAMES = 5 * FPS
 TOTAL_FRAMES = ANIMATED_FRAME_COUNT + STATIC_HOLD_FRAMES
 
 FINAL_LOGO_SCALE = 0.78
@@ -281,7 +281,7 @@ def main():
         )
         subprocess.run(
             [
-                "rsvg-convert", "-w", "1280", "-h", "720", "--format", "png",
+                "rsvg-convert", "-w", "1920", "-h", "1080", "--format", "png",
                 "-o", str(frame_png), str(frame_svg),
             ],
             check=True,
