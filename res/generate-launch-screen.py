@@ -98,10 +98,17 @@ class Star:
 
     def randomize_position(self):
         angle = self.rng.random() * 2.0 * math.pi
-        distance = math.sqrt(self.rng.random()) * (FRAME_WIDTH / 2.0)
-        self.x = math.cos(angle) * distance
-        self.y = math.sin(angle) * distance
-        self.size = (1.0 - distance / (FRAME_WIDTH / 2.0)) * 0.1 + 0.5
+        distance_ratio = math.sqrt(self.rng.random())
+        if FRAME_HEIGHT == 720:
+            # Keep the established landscape star distribution unchanged.
+            distance = distance_ratio * (FRAME_WIDTH / 2.0)
+            self.x = math.cos(angle) * distance
+            self.y = math.sin(angle) * distance
+        else:
+            # In portrait, distribute stars over the full 9:16 canvas.
+            self.x = math.cos(angle) * distance_ratio * (FRAME_WIDTH / 2.0)
+            self.y = math.sin(angle) * distance_ratio * (FRAME_HEIGHT / 2.0)
+        self.size = (1.0 - distance_ratio) * 0.1 + 0.5
         self.color = STAR_COLOR
 
     def reset(self):
@@ -210,6 +217,39 @@ def settling_scale(progress):
     return interpolate(BOUNCE_HIGH_SCALE, FINAL_LOGO_SCALE, (progress - 0.72) / 0.28)
 
 
+def configure_orientation(root, orientation):
+    """Adapt the SVG coordinate system and logo layout to the target orientation."""
+    if orientation == "portrait":
+        canvas_width, canvas_height = 720, 1280
+        app_name_x, app_name_y, app_name_size = 360, 755, 48
+    else:
+        canvas_width, canvas_height = 1280, 720
+        app_name_x, app_name_y, app_name_size = 640, 485, 54
+
+    root.set("width", str(canvas_width))
+    root.set("height", str(canvas_height))
+    root.set("viewBox", f"0 0 {canvas_width} {canvas_height}")
+
+    canvas_background = next(
+        element for element in root
+        if element.tag == f"{{{SVG_NS}}}rect"
+    )
+    canvas_background.set("width", str(canvas_width))
+    canvas_background.set("height", str(canvas_height))
+
+    logo_group = find_by_id(root, "logo-group")
+    logo_group.set(
+        "transform",
+        f"translate({LOGO_CENTER_X} {LOGO_CENTER_Y}) "
+        f"scale({FINAL_LOGO_SCALE:.5f}) translate(-128 -128)",
+    )
+    app_name = find_by_id(root, "app-name")
+    app_name.set("x", str(app_name_x))
+    app_name.set("y", str(app_name_y))
+    app_name.set("font-size", str(app_name_size))
+    app_name.set("text-anchor", "middle")
+
+
 def configure_frame(root, frame_number):
     logo_group = find_by_id(root, "logo-group")
     background = find_by_id(root, "background-circle")
@@ -244,8 +284,12 @@ def configure_frame(root, frame_number):
         sector.set("opacity", f"{opacity:.4f}")
 
 
-def render_svg(template_path, output_path, frame_number=None, starfield=None, star_speed=0.0):
+def render_svg(
+    template_path, output_path, frame_number=None, starfield=None,
+    star_speed=0.0, orientation="landscape"
+):
     root = ET.parse(template_path).getroot()
+    configure_orientation(root, orientation)
     if frame_number is not None:
         configure_frame(root, frame_number)
     if starfield is not None:
@@ -256,11 +300,25 @@ def render_svg(template_path, output_path, frame_number=None, starfield=None, st
 
 
 def main():
+    global FRAME_WIDTH, FRAME_HEIGHT, LOGO_CENTER_X, LOGO_CENTER_Y
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--template", required=True, type=Path)
     parser.add_argument("--frames", required=True, type=Path)
     parser.add_argument("--static-svg", required=True, type=Path)
+    parser.add_argument(
+        "--orientation", choices=("landscape", "portrait"), default="landscape"
+    )
     args = parser.parse_args()
+
+    if args.orientation == "portrait":
+        FRAME_WIDTH, FRAME_HEIGHT = 720, 1280
+        LOGO_CENTER_X, LOGO_CENTER_Y = 360.0, 545.0
+        output_width, output_height = 1080, 1920
+    else:
+        FRAME_WIDTH, FRAME_HEIGHT = 1280, 720
+        LOGO_CENTER_X, LOGO_CENTER_Y = 639.84, 274.84
+        output_width, output_height = 1920, 1080
 
     if not args.template.is_file():
         raise SystemExit(f"SVG template not found: {args.template}")
@@ -278,18 +336,22 @@ def main():
             frame_number,
             starfield=starfield,
             star_speed=star_speed_for_frame(frame_number),
+            orientation=args.orientation,
         )
         subprocess.run(
             [
-                "rsvg-convert", "-w", "1920", "-h", "1080", "--format", "png",
-                "-o", str(frame_png), str(frame_svg),
+                "rsvg-convert", "-w", str(output_width), "-h", str(output_height),
+                "--format", "png", "-o", str(frame_png), str(frame_svg),
             ],
             check=True,
         )
 
     # The static fallback uses the final frozen star positions and the unchanged
     # assembled logo/text from the SVG template.
-    render_svg(args.template, args.static_svg, starfield=starfield)
+    render_svg(
+        args.template, args.static_svg, starfield=starfield,
+        orientation=args.orientation,
+    )
 
     # Repeat the completed frame instead of re-rendering identical PNGs.
     final_frame = args.frames / f"frame-{ANIMATED_FRAME_COUNT - 1:03d}.png"
@@ -300,7 +362,8 @@ def main():
     print(
         f"Generated {ANIMATED_FRAME_COUNT} animated frames plus "
         f"{STATIC_HOLD_FRAMES} static frames: {TOTAL_FRAMES} frames total at "
-        f"{FPS} fps ({ANIMATED_FRAME_COUNT / FPS:.1f} s animation + "
+        f"{output_width}x{output_height} at {FPS} fps "
+        f"({ANIMATED_FRAME_COUNT / FPS:.1f} s animation + "
         f"{STATIC_HOLD_FRAMES / FPS:.1f} s static hold = {TOTAL_FRAMES / FPS:.1f} s)."
     )
 
