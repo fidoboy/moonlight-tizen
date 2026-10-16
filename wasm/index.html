@@ -20,10 +20,33 @@
     html.app-starting .mdl-layout {
       visibility: hidden !important;
     }
+    /* Lightweight status surface used only by the experimental direct Smart Hub launch. */
+    #directSmartHubStatus {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2147483647;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      padding: 4vw;
+      /* Never obscure the stream if a platform event is missed. */
+      background: transparent;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 28px;
+      line-height: 1.3;
+      text-align: center;
+      pointer-events: none;
+    }
   </style>
   <script type="text/javascript" src="platform.js"></script>
 </head>
 <body data-name="moonlight-tizen" data-tools="emscripten" data-configs="Debug Release" data-path="{tc}/{config}">
+  <div id="directSmartHubStatus" role="status" aria-live="polite"></div>
   <div class="mdl-layout mdl-js-layout">
     <header id="main-header" class="mdl-layout__header">
       <div class="mdl-layout__header-row">
@@ -57,6 +80,17 @@
         </nav>
       </div>
     </header>
+    <div id="configSummaryBar" aria-label="Current Moonlight configuration">
+      <div class="config-summary-item"><span class="config-summary-label" data-i18n="Resolution">Resolution</span><span id="summaryResolution" class="config-summary-value">—</span></div>
+      <div class="config-summary-item"><span class="config-summary-label" data-i18n="FPS">FPS</span><span id="summaryFps" class="config-summary-value">—</span></div>
+      <div class="config-summary-item"><span class="config-summary-label" data-i18n="Bitrate">Bitrate</span><span id="summaryBitrate" class="config-summary-value">—</span></div>
+      <div class="config-summary-item"><span class="config-summary-label" data-i18n="Optimal bitrate">Optimal bitrate</span><span id="summaryOptimalBitrate" class="config-summary-value config-summary-toggle">—</span></div>
+      <div class="config-summary-item"><span class="config-summary-label" data-i18n="HDR">HDR</span><span id="summaryHdr" class="config-summary-value config-summary-toggle">—</span></div>
+      <div class="config-summary-item"><span class="config-summary-label" data-i18n="Codec">Codec</span><span id="summaryCodec" class="config-summary-value">—</span></div>
+      <div class="config-summary-item"><span class="config-summary-label" data-i18n="Dolby">Dolby</span><span id="summaryDolby" class="config-summary-value config-summary-toggle">—</span></div>
+      <div class="config-summary-item"><span class="config-summary-label" data-i18n="Audio">Audio</span><span id="summaryAudio" class="config-summary-value">—</span></div>
+      <div class="config-summary-item"><span class="config-summary-label" data-i18n="Game mode summary">Game mode</span><span id="summaryGameMode" class="config-summary-value config-summary-toggle">—</span></div>
+    </div>
     <main id="main-content" class="mdl-layout__content">
       <div id="host-grid">
         <div id="addHostContainer" class="host-add-container mdl-card mdl-shadow--4dp" role="link" tabindex="0" aria-label="Add Host">
@@ -780,7 +814,7 @@
           </li>
           <li class="navGuideDialogControls">
             <span class="navGuideRemoteText" data-i18n="RETURN">RETURN</span> / <span class="navGuideKeyboardText" data-i18n="ESC">ESC</span> / <span class="navGuideGamepadText" data-i18n="B">B</span>
-            <span data-i18n="— Return to the previous view, close any active menu or dialog, cancel the operation, exit the application with confirmation, and click the right mouse button in emulation.">— Return to the previous view, close any active menu or dialog, cancel the operation, exit the application with confirmation, and click the right mouse button in emulation.</span>
+            <span data-i18n="— Return to the previous view, close any active menu or dialog, or cancel the operation. While streaming, open or close the stream menu instead. Exit the application with confirmation, and click the right mouse button in emulation.">— Return to the previous view, close any active menu or dialog, or cancel the operation. While streaming, open or close the stream menu instead. Exit the application with confirmation, and click the right mouse button in emulation.</span>
           </li>
           <li class="navGuideDialogControls">
             <span class="navGuideGamepadText" data-i18n="LEFT BUMPER">LEFT BUMPER</span>

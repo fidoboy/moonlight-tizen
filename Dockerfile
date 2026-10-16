@@ -105,13 +105,15 @@ COPY --chown=moonlight wasm/static/ ./moonlight-tizen/wasm/static/
 COPY --chown=moonlight .gi[t]/ ./moonlight-tizen/.git/
 
 # The following steps inject build metadata into the application such as build type, short commit SHA, and repository information by replacing placeholders in the `wasm/platform/index.js` file.
-# This allows the application to display build information on development builds while keeping release builds clean.
+# Only builds published by the stable-release workflow are treated as official; all other builds are marked experimental.
 ARG BUILD_TYPE=release
+ARG OFFICIAL_RELEASE=false
 ARG REPO_OWNER
 ARG REPO_NAME
 RUN \
     # Always inject the build type, repo owner, and repo name regardless of the build type
 	sed -i "s/__BUILD_TYPE__/$BUILD_TYPE/g" moonlight-tizen/wasm/platform/index.js && \
+    sed -i "s/__OFFICIAL_RELEASE__/$OFFICIAL_RELEASE/g" moonlight-tizen/wasm/platform/index.js && \
     if [ -n "$REPO_OWNER" ]; then \
         sed -i "s/__REPO_OWNER__/$REPO_OWNER/g" moonlight-tizen/wasm/platform/index.js; \
     fi && \

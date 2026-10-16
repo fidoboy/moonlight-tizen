@@ -91,6 +91,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_TYPE=release
+            OFFICIAL_RELEASE=true
             REPO_OWNER=${{ github.repository_owner }}
             REPO_NAME=${{ github.event.repository.name }}
             FORCE_GAME_MODE=false
@@ -117,6 +118,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_TYPE=release
+            OFFICIAL_RELEASE=true
             REPO_OWNER=${{ github.repository_owner }}
             REPO_NAME=${{ github.event.repository.name }}
             FORCE_GAME_MODE=true

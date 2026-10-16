@@ -231,6 +231,10 @@ body {
 #streamMenuDialogOverlay, #streamMenuDialog::backdrop {
     cursor: none;
 }
+/* The stream menu is remote-controlled; ignore hover from the hidden pointer so it cannot highlight a second entry. */
+#streamMenuDialog .mdl-button--raised.mdl-button--colored:hover:not(:focus) {
+    box-shadow: none;
+}
 .mdl-dialog__title {
     margin: 0;
     padding: 24px 24px 14px;
@@ -1146,4 +1150,44 @@ body {
     100% {
         transform: translateX(-100%);
     }
+}
+
+
+/* Compact current-configuration strip, shown only on the Hosts and Apps screens. */
+#configSummaryBar {
+    display: none;
+    align-items: center;
+    justify-content: safe center;
+    gap: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 12px;
+    background: #20232c;
+    color: #f1f1f1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: thin;
+    flex: 0 0 auto;
+}
+.config-summary-item {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: baseline;
+    gap: 5px;
+    padding: 0 10px;
+    border-right: 1px solid #454955;
+    font-size: 16px;
+    line-height: 1.4;
+}
+.config-summary-item:first-child { padding-left: 2px; }
+.config-summary-item:last-child { border-right: 0; padding-right: 2px; }
+.config-summary-label { color: #b9bdc8; }
+.config-summary-label::after { content: ":"; margin-right: 4px; }
+.config-summary-value { color: #fff; font-weight: 600; }
+.config-summary-toggle.is-on { color: #39e75f; }
+.config-summary-toggle.is-off { color: #ff4b4b; }
+@media (max-width: 800px) {
+    #configSummaryBar { padding: 6px 8px; }
+    .config-summary-item { padding: 0 7px; font-size: 14px; }
 }

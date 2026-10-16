@@ -297,8 +297,53 @@ function handleMessage(msg) {
     $('#loadingSpinner').css('display', 'none');
     $('body').css('backgroundColor', '#282C38');
     $('#wasm_module').css('display', 'none');
-    // Show a termination snackbar message if the termination was unexpected
     var errorCode = parseInt(msg.replace('streamTerminated: ', ''));
+
+    // A direct Smart Hub launch is a single-purpose session: never return to Moonlight's home UI.
+    // Preserve the optional "quit host app after disconnect" behavior for graceful disconnects,
+    // but always exit this client regardless of whether the stream ended normally or with an error.
+    if (window._directSmartHubLaunch) {
+      // Paint a minimal status message before exiting; do not restore the home UI.
+      if (typeof window.setDirectSmartHubStatus === 'function') {
+        var directLaunchHostName = window._directSmartHubLaunch && window._directSmartHubLaunch.hostName;
+        if (!directLaunchHostName && window._directSmartHubHost) {
+          directLaunchHostName = window._directSmartHubHost.hostname;
+        }
+        window.setDirectSmartHubStatus(directLaunchHostName
+          ? 'Finalizando transmisión con ' + directLaunchHostName + '...'
+          : 'Cerrando la transmisión...');
+      }
+      var shouldQuitDirectHostApp = errorCode === 0 &&
+        $('#quitAppAfterDisconnectSwitch').parent().hasClass('is-checked');
+      var exitDirectLaunch = function() {
+        try {
+          tizen.application.getCurrentApplication().exit();
+        } catch (error) {
+          console.error('%c[messages.js, handleMessage]', 'color: gray;', 'Could not exit after direct Smart Hub session ended:', error);
+        }
+      };
+      var finishDirectLaunch = function() {
+        // Give the browser one paint opportunity so the status is visible even when
+        // no host-app quit request is needed.
+        if (typeof window.requestAnimationFrame === 'function') {
+          window.requestAnimationFrame(exitDirectLaunch);
+        } else {
+          window.setTimeout(exitDirectLaunch, 0);
+        }
+      };
+
+      if (shouldQuitDirectHostApp && window.api && typeof window.api.quitApp === 'function') {
+        window.api.quitApp().then(finishDirectLaunch, function(failedQuitApp) {
+          console.error('%c[messages.js, handleMessage]', 'color: gray;', 'Failed to quit the host app after direct Smart Hub session:', failedQuitApp);
+          finishDirectLaunch();
+        });
+      } else {
+        finishDirectLaunch();
+      }
+      return;
+    }
+
+    // Standard Moonlight launches retain their existing termination messages and return-to-apps flow.
     switch (errorCode) {
       case 0: // ML_ERROR_GRACEFUL_TERMINATION
         break;
@@ -360,6 +405,11 @@ function handleMessage(msg) {
     }
 
   } else if (msg === 'Connection Established') {
+    // The direct-launch status must not cover the video while the first frame is arriving.
+    if (window._directSmartHubLaunch) {
+      var directStatusOnConnect = document.getElementById('directSmartHubStatus');
+      if (directStatusOnConnect) directStatusOnConnect.style.display = 'none';
+    }
     // Prepare the screen for video stream
     $('#loadingSpinner').css('display', 'none');
     $('body').css('backgroundColor', 'transparent');
@@ -375,6 +425,12 @@ function handleMessage(msg) {
     // Show dialog message using the warning dialog
     warningDialog(t('Connection Error'), translateBackendMessage(msg.replace('DialogMsg: ', '')));
   } else if (msg === 'displayVideo') {
+    // Hide the lightweight direct-launch status once the stream video is ready.
+    if (window._directSmartHubLaunch) {
+      // Use direct DOM access for compatibility with older Tizen WebKit engines.
+      var directStatusElement = document.getElementById('directSmartHubStatus');
+      if (directStatusElement) directStatusElement.style.display = 'none';
+    }
     // Show the video stream now
     $('#listener').addClass('fullscreen');
   } else if (msg.indexOf('NoWarningMsg: ') === 0) {
@@ -386,23 +442,13 @@ function handleMessage(msg) {
     $('#connection-warnings').css('background', 'rgba(0, 0, 0, 0.5)');
     $('#connection-warnings').text(translateBackendMessage(msg.replace('WarningMsg: ', '')));
   } else if (msg.indexOf('NoStatMsg: ') === 0) {
-    // Toggle the performance stats switch and save the state
-    if ($('#performanceStatsSwitch').prop('checked')) {
-      $('#performanceStatsBtn')[0].MaterialSwitch.off();
-      savePerformanceStats();
-      $('#performance-stats').css('display', 'none');
-    }
-    // Hide the performance statistics overlay
+    // Hide the overlay for this streaming session without changing the saved preference.
+    $('#performance-stats').css('display', 'none');
     $('#performance-stats').css('background', 'transparent');
     $('#performance-stats').text('');
   } else if (msg.indexOf('StatMsg: ') === 0) {
-    // Toggle the performance stats switch and save the state
-    if (!$('#performanceStatsSwitch').prop('checked')) {
-      $('#performanceStatsBtn')[0].MaterialSwitch.on();
-      savePerformanceStats();
-      $('#performance-stats').css('display', 'inline-block');
-    }
-    // Show the performance statistics overlay
+    // Show the overlay for this streaming session without changing the saved preference.
+    $('#performance-stats').css('display', 'inline-block');
     $('#performance-stats').css('background', 'rgba(0, 0, 0, 0.5)');
     $('#performance-stats').text(translateBackendMessage(msg.replace('StatMsg: ', '')));
   } else if (msg.indexOf('controllerRumble: ') === 0) {

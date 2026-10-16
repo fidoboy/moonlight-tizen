@@ -171,7 +171,6 @@
   "RETURN": "RETORNAR",
   "ESC": "ESC",
   "B": "B",
-  "— Return to the previous view, close any active menu or dialog, cancel the operation, exit the application with confirmation, and click the right mouse button in emulation.": "— Voltar para a visualização anterior, fechar qualquer menu ou caixa de diálogo ativa, cancelar a operação, sair do aplicativo com confirmação e clicar com o botão direito do mouse na emulação.",
   "LEFT BUMPER": "BUMPER ESQUERDO",
   "— Click the left mouse button in emulation.": "— Clicar com o botão esquerdo do mouse na emulação.",
   "RIGHT BUMPER": "BUMPER DIREITO",
@@ -386,5 +385,15 @@
   "Quit host app on disconnect": "Fechar o aplicativo do host ao desconectar",
   "- When enabled, Moonlight attempts to quit the app running on the host after a normal disconnection. Unexpected connection failures do not trigger this option.": "- Quando ativado, o Moonlight tenta fechar o aplicativo em execução no host após uma desconexão normal. Falhas inesperadas de conexão não acionam esta opção.",
   "Automatically quit the running app on the host": "Fechar automaticamente o aplicativo em execução no host",
-  "Could not automatically quit the host app.": "Não foi possível fechar automaticamente o aplicativo do host."
+  "Could not automatically quit the host app.": "Não foi possível fechar automaticamente o aplicativo do host.",
+  "Resolution": "Resolução",
+  "FPS": "FPS",
+  "Bitrate": "Taxa de bits",
+  "Optimal bitrate": "Taxa de bits ideal",
+  "HDR": "HDR",
+  "Codec": "Codec",
+  "Dolby": "Dolby",
+  "Audio": "Áudio",
+  "Game mode summary": "Modo jogo",
+  "— Return to the previous view, close any active menu or dialog, or cancel the operation. While streaming, open or close the stream menu instead. Exit the application with confirmation, and click the right mouse button in emulation.": "— Voltar para a visualização anterior, fechar menus ou caixas de diálogo ativos ou cancelar a operação. Durante a transmissão, abrir ou fechar o menu da transmissão em vez disso. Sair do aplicativo com confirmação e clicar com o botão direito do mouse na emulação."
 }
