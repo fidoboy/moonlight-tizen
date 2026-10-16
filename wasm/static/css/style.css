@@ -231,6 +231,10 @@ body {
 #streamMenuDialogOverlay, #streamMenuDialog::backdrop {
     cursor: none;
 }
+/* The stream menu is remote-controlled; ignore hover from the hidden pointer so it cannot highlight a second entry. */
+#streamMenuDialog .mdl-button--raised.mdl-button--colored:hover:not(:focus) {
+    box-shadow: none;
+}
 .mdl-dialog__title {
     margin: 0;
     padding: 24px 24px 14px;
