@@ -49,6 +49,10 @@
     html.app-starting .mdl-layout {
       visibility: hidden !important;
     }
+    /* Keep the stream statistics accessible without revealing the hidden direct-launch UI. */
+    html.app-starting #performance-stats {
+      visibility: visible !important;
+    }
     /* Lightweight status surface used only by the experimental direct Smart Hub launch. */
     #directSmartHubStatus {
       position: fixed;

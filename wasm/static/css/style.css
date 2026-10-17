@@ -1185,7 +1185,7 @@ body {
 .config-summary-item {
     display: inline-flex;
     flex: 0 0 auto;
-    align-items: baseline;
+    align-items: center;
     gap: 5px;
     padding: 0 10px;
     border-right: 1px solid #454955;
@@ -1194,6 +1194,16 @@ body {
 }
 .config-summary-item:first-child { padding-left: 2px; }
 .config-summary-item:last-child { border-right: 0; padding-right: 2px; }
+.config-summary-icon {
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    vertical-align: middle;
+    user-select: none;
+    -webkit-user-drag: none;
+}
 .config-summary-label { color: #b9bdc8; }
 .config-summary-label::after { content: ":"; margin-right: 4px; }
 .config-summary-value { color: #fff; font-weight: 600; }

@@ -5477,20 +5477,30 @@ function createConfigSummaryBar() {
   bar.setAttribute('aria-label', 'Current Moonlight configuration');
 
   var items = [
-    { label: 'Resolution', id: 'summaryResolution' },
-    { label: 'FPS', id: 'summaryFps' },
+    { label: 'Resolution', id: 'summaryResolution', icon: 'static/res/ic_summary_resolution.svg' },
+    { label: 'FPS', id: 'summaryFps', icon: 'static/res/ic_summary_fps.svg' },
     { label: 'Bitrate', id: 'summaryBitrate' },
     { label: 'Optimal bitrate', id: 'summaryOptimalBitrate', toggle: true },
     { label: 'HDR', id: 'summaryHdr', toggle: true },
     { label: 'Codec', id: 'summaryCodec' },
-    { label: 'Dolby', id: 'summaryDolby', toggle: true },
-    { label: 'Audio', id: 'summaryAudio' },
-    { label: 'Game mode summary', id: 'summaryGameMode', toggle: true }
+    { label: 'Dolby', id: 'summaryDolby', toggle: true, icon: 'static/res/ic_dolby_double_d.svg' },
+    { label: 'Audio', id: 'summaryAudio', icon: 'static/res/ic_summary_audio.svg' },
+    { label: 'Game mode summary', id: 'summaryGameMode', toggle: true, icon: 'static/res/ic_summary_gamepad.svg' }
   ];
 
   items.forEach(function(entry) {
     var item = document.createElement('div');
     item.className = 'config-summary-item';
+
+    if (entry.icon) {
+      var icon = document.createElement('img');
+      icon.className = 'config-summary-icon';
+      icon.src = entry.icon;
+      icon.alt = '';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.setAttribute('draggable', 'false');
+      item.appendChild(icon);
+    }
 
     var label = document.createElement('span');
     label.className = 'config-summary-label';
