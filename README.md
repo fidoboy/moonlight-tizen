@@ -6,7 +6,7 @@
 
 [![Release Version](https://img.shields.io/github/v/release/fidoboy/moonlight-tizen-ac3?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen-ac3/releases/latest)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/fidoboy/moonlight-tizen-ac3/build-ac3-passthrough.yml?branch=master&style=for-the-badge&logo=docker)](https://github.com/fidoboy/moonlight-tizen-ac3/actions/workflows/build-ac3-passthrough.yml?query=branch%3Amaster)
-<img src="https://img.shields.io/badge/Tizen-TV-blue?style=for-the-badge" />
+[<img src="https://img.shields.io/badge/Tizen-TV-blue?style=for-the-badge" />](https://www.tizen.org/)
 [![Total Downloads](https://img.shields.io/github/downloads/fidoboy/moonlight-tizen-ac3/total?style=for-the-badge&logo=github)](https://github.com/fidoboy/moonlight-tizen-ac3/releases)
 
 Moonlight Tizen with AC-3 support is a port of [Moonlight ChromeOS](https://github.com/moonlight-stream/moonlight-chrome), an open-source client for NVIDIA GameStream and [Sunshine](https://app.lizardbyte.dev/Sunshine/). It lets you stream games, applications, and your desktop from a PC to a Samsung Smart TV.
