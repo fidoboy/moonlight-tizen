@@ -108,6 +108,7 @@ RUN --mount=type=cache,target=/home/moonlight/.ccache,uid=1000,gid=1000 \
 # Copy the remaining frontend files required for packaging the application
 COPY --chown=moonlight res/ ./moonlight-tizen/res/
 COPY --chown=moonlight wasm/index.html ./moonlight-tizen/wasm/
+COPY --chown=moonlight wasm/ui.html ./moonlight-tizen/wasm/
 COPY --chown=moonlight wasm/platform/ ./moonlight-tizen/wasm/platform/
 COPY --chown=moonlight wasm/static/ ./moonlight-tizen/wasm/static/
 COPY --chown=moonlight .gi[t]/ ./moonlight-tizen/.git/
