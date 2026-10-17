@@ -463,10 +463,11 @@ function focusFirstOnlineHostAfterStartup(finalizeIfNone) {
       !isHostsLoaded || !isStartupInitialHostChecksDone || isInGame || isDialogOpen) return false;
 
   var hostGrid = document.getElementById('host-grid');
-  if (!hostGrid || !window.Views || !Views.Hosts || !window.Navigation) return false;
+  if (!hostGrid || !window.Views || !Views.Hosts) return false;
   var children = hostGrid.children;
   var target = null;
 
+  // Iterate rendered order so connection response timing cannot change the selection.
   for (var i = 0; i < children.length; i++) {
     var card = children[i];
     if (!card || !card.id || card.id.indexOf('host-container-') !== 0) continue;
@@ -482,14 +483,20 @@ function focusFirstOnlineHostAfterStartup(finalizeIfNone) {
     return false;
   }
 
-  var current = Views.Hosts.view.current();
-  if (current && current !== target && typeof unmark === 'function') unmark(current);
   var targetIndex = Array.prototype.indexOf.call(children, target);
   if (targetIndex < 0) return false;
 
+  var current = Views.Hosts.view.current();
+  if (current && current !== target && typeof unmark === 'function') unmark(current);
   Views.Hosts.view.index = targetIndex;
-  Navigation.switch();
-  Navigation.switch();
+
+  // Navigation.switch() can be a no-op while Navigation is stopped or unfocused.
+  // Set the highlight and real DOM focus directly, keeping its current index in sync.
+  if (typeof mark === 'function') mark(target);
+  if (typeof focusElement === 'function') focusElement(target);
+  else if (typeof target.focus === 'function') target.focus();
+  if (typeof target.scrollIntoView === 'function') target.scrollIntoView(false);
+
   isStartupHostFocusResolved = true;
   return true;
 }

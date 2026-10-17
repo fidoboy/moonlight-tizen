@@ -398,9 +398,9 @@ function handleMessage(msg) {
     $('#loadingSpinner').css('display', 'none');
     $('body').css('backgroundColor', 'transparent');
     if (window._directSmartHubLaunch) {
-      if (typeof window.showDirectLaunchMessage === 'function') {
-        window.showDirectLaunchMessage('Starting %1$s...', window._directSmartHubLaunch.appName || String(window._directSmartHubLaunch.appId));
-      }
+      // The full-screen startup status is already shown while connecting. Hide it here
+      // even if displayVideo arrived earlier on this TV.
+      if (typeof window.hideDirectLaunchMessage === 'function') window.hideDirectLaunchMessage();
       var directVideo = document.getElementById('wasm_module');
       if (directVideo) {
         directVideo.style.display = 'block';
