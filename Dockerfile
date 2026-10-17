@@ -3,18 +3,21 @@ FROM ubuntu:22.04 AS splash
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg librsvg2-bin fonts-dejavu-core python3 && rm -rf /var/lib/apt/lists/*
 COPY res/launch-screen.svg /tmp/launch-screen.svg
 COPY res/generate-launch-screen.py /tmp/generate-launch-screen.py
+COPY res/launch_screen.wav /tmp/launch-screen.wav
 RUN python3 /tmp/generate-launch-screen.py --template /tmp/launch-screen.svg --frames /tmp/launch-frames-landscape --static-svg /tmp/launch-screen-final.svg --orientation landscape && \
     python3 /tmp/generate-launch-screen.py --template /tmp/launch-screen.svg --frames /tmp/launch-frames-portrait --static-svg /tmp/launch-screen-portrait-final.svg --orientation portrait && \
     rsvg-convert -w 1920 -h 1080 --format png -o /tmp/launch-screen.png /tmp/launch-screen-final.svg && \
     rsvg-convert -w 1080 -h 1920 --format png -o /tmp/launch-screen-portrait.png /tmp/launch-screen-portrait-final.svg && \
-    ffmpeg -hide_banner -loglevel error -framerate 30 -i /tmp/launch-frames-landscape/frame-%03d.png -frames:v 258 \
+    ffmpeg -hide_banner -loglevel error -framerate 30 -i /tmp/launch-frames-landscape/frame-%03d.png -i /tmp/launch-screen.wav -frames:v 258 \
+    -map 0:v:0 -map 1:a:0 \
     -c:v libx264 -preset veryslow -tune stillimage -crf 20 -pix_fmt yuv420p \
-    -profile:v baseline -level 4.0 -an -movflags +faststart -y /tmp/launch-screen.mp4 && \
-    test -s /tmp/launch-screen.mp4 && echo "Landscape splash MP4: $(stat -c %s /tmp/launch-screen.mp4) bytes" && test "$(stat -c %s /tmp/launch-screen.mp4)" -lt 2097152 && \
-    ffmpeg -hide_banner -loglevel error -framerate 30 -i /tmp/launch-frames-portrait/frame-%03d.png -frames:v 258 \
+    -c:a aac -b:a 96k -ar 48000 -ac 2 -shortest -movflags +faststart -y /tmp/launch-screen.mp4 && \
+    test -s /tmp/launch-screen.mp4 && test "$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 /tmp/launch-screen.mp4)" = "aac" && echo "Landscape splash MP4: $(stat -c %s /tmp/launch-screen.mp4) bytes (AAC audio)" && test "$(stat -c %s /tmp/launch-screen.mp4)" -lt 2097152 && \
+    ffmpeg -hide_banner -loglevel error -framerate 30 -i /tmp/launch-frames-portrait/frame-%03d.png -i /tmp/launch-screen.wav -frames:v 258 \
+    -map 0:v:0 -map 1:a:0 \
     -c:v libx264 -preset veryslow -tune stillimage -crf 20 -pix_fmt yuv420p \
-    -profile:v baseline -level 4.0 -an -movflags +faststart -y /tmp/launch-screen-portrait.mp4 && \
-    test -s /tmp/launch-screen-portrait.mp4 && echo "Portrait splash MP4: $(stat -c %s /tmp/launch-screen-portrait.mp4) bytes" && test "$(stat -c %s /tmp/launch-screen-portrait.mp4)" -lt 2097152 && \
+    -c:a aac -b:a 96k -ar 48000 -ac 2 -shortest -movflags +faststart -y /tmp/launch-screen-portrait.mp4 && \
+    test -s /tmp/launch-screen-portrait.mp4 && test "$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 /tmp/launch-screen-portrait.mp4)" = "aac" && echo "Portrait splash MP4: $(stat -c %s /tmp/launch-screen-portrait.mp4) bytes (AAC audio)" && test "$(stat -c %s /tmp/launch-screen-portrait.mp4)" -lt 2097152 && \
     test "$(stat -c %s /tmp/launch-screen.png)" -lt 204800 && \
     test "$(stat -c %s /tmp/launch-screen-portrait.png)" -lt 204800
 FROM ubuntu:22.04 AS sdk
