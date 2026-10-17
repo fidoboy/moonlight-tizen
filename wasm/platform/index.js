@@ -1,10 +1,5 @@
-// The native splash video contains a 3.6-second animation followed by a 5-second
-// static frame. Keep a deadline as a lower bound, and also give the restored UI
-// a safety window before dismissing the native screen.
-const NATIVE_SPLASH_ANIMATION_DURATION_MS = 3600;
-const NATIVE_SPLASH_FINAL_HOLD_MS = 5000;
-const NATIVE_SPLASH_MIN_RELEASE_AT = Date.now() + NATIVE_SPLASH_ANIMATION_DURATION_MS + NATIVE_SPLASH_FINAL_HOLD_MS;
-const NATIVE_SPLASH_HOLD_AFTER_UI_READY_MS = 5000;
+// Tizen's native splash remains visible until releaseNativeLaunchScreen()
+// is called. Do not impose an arbitrary delay after the web UI is ready.
 
 // Initialize global variables and constants
 var appInfo = tizen.application.getAppInfo(); // Retrieve the application information
@@ -352,23 +347,15 @@ function releaseNativeLaunchScreen(onReleased) {
     }
   };
 
-  // Let the web UI paint before switching away from the native video splash.
-  // The deadline protects the animation's static tail, while the second limit
-  // prevents an almost-immediate release if initialization outlasts that deadline.
-  var scheduleReleaseAfterPaint = function() {
-    var remainingMinimumTime = Math.max(0, NATIVE_SPLASH_MIN_RELEASE_AT - Date.now());
-    window.setTimeout(
-      release,
-      Math.max(NATIVE_SPLASH_HOLD_AFTER_UI_READY_MS, remainingMinimumTime)
-    );
-  };
-
+  // The UI has already been restored. Allow it to pass through two render cycles,
+  // then dismiss the native splash immediately; never leave an arbitrary timer
+  // between UI readiness and the handoff.
   if (typeof window.requestAnimationFrame === 'function') {
     window.requestAnimationFrame(function() {
-      window.requestAnimationFrame(scheduleReleaseAfterPaint);
+      window.requestAnimationFrame(release);
     });
   } else {
-    scheduleReleaseAfterPaint();
+    release();
   }
 }
 
