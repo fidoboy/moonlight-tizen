@@ -3,8 +3,10 @@
 
 Eight sectors fade in sequentially. The logo then makes a clear, controlled
 bounce while the gray disc and app name fade in. The starfield continues to
-decelerate for one second after the logo settles; total video duration remains
-unchanged, with the static hold shortened to compensate.
+decelerate for two seconds after the logo settles. One second after the app
+title is fully visible, the existing Dolby Double-D SVG fades in below it.
+Total video duration remains unchanged, with the static hold shortened to
+compensate.
 """
 import argparse
 import math
@@ -22,7 +24,11 @@ SECTOR_FADE_FRAMES = 9      # 300 ms fade-in for each sector
 SECTOR_PHASE_FRAMES = 8 * SECTOR_INTERVAL_FRAMES
 SETTLE_FRAMES = 36          # 1.2 s for the bounce and accompanying fade
 LOGO_ANIMATION_FRAME_COUNT = SECTOR_PHASE_FRAMES + SETTLE_FRAMES
-STAR_DECELERATION_AFTER_LOGO_FRAMES = FPS  # Continue for 1 s after the logo settles.
+STAR_DECELERATION_AFTER_LOGO_FRAMES = 2 * FPS  # Continue for 2 s after the logo settles.
+DOLBY_LOGO_DELAY_AFTER_TITLE_FRAMES = FPS  # Wait 1 s after Moonlight becomes fully visible.
+DOLBY_LOGO_FADE_IN_FRAMES = FPS // 2  # Fade in over 0.5 s.
+DOLBY_LOGO_FADE_START_FRAME = LOGO_ANIMATION_FRAME_COUNT + DOLBY_LOGO_DELAY_AFTER_TITLE_FRAMES
+DOLBY_LOGO_SCALE = 2.2  # Approximately the cap-height of the Moonlight title.
 ANIMATED_FRAME_COUNT = LOGO_ANIMATION_FRAME_COUNT + STAR_DECELERATION_AFTER_LOGO_FRAMES
 TOTAL_FRAMES = LOGO_ANIMATION_FRAME_COUNT + 5 * FPS  # Preserve the original total duration.
 STATIC_HOLD_FRAMES = TOTAL_FRAMES - ANIMATED_FRAME_COUNT
@@ -56,6 +62,21 @@ def find_by_id(root, target_id):
         if element.get("id") == target_id:
             return element
     raise RuntimeError(f"Missing expected SVG element id={target_id!r}")
+
+
+def inject_dolby_logo(root, logo_svg_path):
+    """Copy the existing Dolby Double-D path into the splash SVG placeholder."""
+    placeholder = find_by_id(root, "dolby-logo")
+    icon_root = ET.parse(logo_svg_path).getroot()
+    source_path = next(
+        (element for element in icon_root.iter()
+         if element.tag == f"{{{SVG_NS}}}path"),
+        None,
+    )
+    if source_path is None:
+        raise RuntimeError(f"No path found in Dolby logo SVG: {logo_svg_path}")
+
+    ET.SubElement(placeholder, source_path.tag, dict(source_path.attrib))
 
 
 def smoothstep(value):
@@ -252,11 +273,22 @@ def configure_orientation(root, orientation):
     app_name.set("font-size", str(app_name_size))
     app_name.set("text-anchor", "middle")
 
+    # The Dolby symbol uses the same source SVG as the streaming configuration UI.
+    # Keep it centered under Moonlight and close to the title's visual letter height.
+    dolby_logo = find_by_id(root, "dolby-logo")
+    dolby_center_y = 810 if orientation == "portrait" else 540
+    dolby_logo.set(
+        "transform",
+        f"translate({app_name_x} {dolby_center_y}) "
+        f"scale({DOLBY_LOGO_SCALE:.5f}) translate(-12 -12)",
+    )
+
 
 def configure_frame(root, frame_number):
     logo_group = find_by_id(root, "logo-group")
     background = find_by_id(root, "background-circle")
     app_name = find_by_id(root, "app-name")
+    dolby_logo = find_by_id(root, "dolby-logo")
     sectors = [find_by_id(root, f"sector-{i}") for i in range(8)]
 
     if frame_number < SECTOR_PHASE_FRAMES:
@@ -278,6 +310,16 @@ def configure_frame(root, frame_number):
     background.set("fill-opacity", f"{fade:.4f}")
     app_name.set("opacity", f"{fade:.4f}")
 
+    if frame_number < DOLBY_LOGO_FADE_START_FRAME:
+        dolby_opacity = 0.0
+    else:
+        fade_progress = min(
+            1.0,
+            (frame_number - DOLBY_LOGO_FADE_START_FRAME + 1) / DOLBY_LOGO_FADE_IN_FRAMES,
+        )
+        dolby_opacity = smoothstep(fade_progress)
+    dolby_logo.set("opacity", f"{dolby_opacity:.4f}")
+
     for index, sector in enumerate(sectors):
         start_frame = index * SECTOR_INTERVAL_FRAMES
         if frame_number < start_frame:
@@ -288,13 +330,17 @@ def configure_frame(root, frame_number):
 
 
 def render_svg(
-    template_path, output_path, frame_number=None, starfield=None,
+    template_path, output_path, dolby_logo_path, frame_number=None, starfield=None,
     star_speed=0.0, orientation="landscape"
 ):
     root = ET.parse(template_path).getroot()
+    inject_dolby_logo(root, dolby_logo_path)
     configure_orientation(root, orientation)
     if frame_number is not None:
         configure_frame(root, frame_number)
+    else:
+        # Static PNG fallback uses the completed splash state.
+        find_by_id(root, "dolby-logo").set("opacity", "1")
     if starfield is not None:
         if frame_number is not None:
             starfield.update(star_speed)
@@ -307,6 +353,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--template", required=True, type=Path)
+    parser.add_argument("--dolby-logo", required=True, type=Path)
     parser.add_argument("--frames", required=True, type=Path)
     parser.add_argument("--static-svg", required=True, type=Path)
     parser.add_argument(
@@ -325,6 +372,8 @@ def main():
 
     if not args.template.is_file():
         raise SystemExit(f"SVG template not found: {args.template}")
+    if not args.dolby_logo.is_file():
+        raise SystemExit(f"Dolby logo SVG not found: {args.dolby_logo}")
     args.frames.mkdir(parents=True, exist_ok=True)
     args.static_svg.parent.mkdir(parents=True, exist_ok=True)
 
@@ -336,6 +385,7 @@ def main():
         render_svg(
             args.template,
             frame_svg,
+            args.dolby_logo,
             frame_number,
             starfield=starfield,
             star_speed=star_speed_for_frame(frame_number),
@@ -352,7 +402,7 @@ def main():
     # The static fallback uses the final frozen star positions and the unchanged
     # assembled logo/text from the SVG template.
     render_svg(
-        args.template, args.static_svg, starfield=starfield,
+        args.template, args.static_svg, args.dolby_logo, starfield=starfield,
         orientation=args.orientation,
     )
 
@@ -368,7 +418,9 @@ def main():
         f"{output_width}x{output_height} at {FPS} fps "
         f"({LOGO_ANIMATION_FRAME_COUNT / FPS:.1f} s logo animation + "
         f"{STAR_DECELERATION_AFTER_LOGO_FRAMES / FPS:.1f} s continued starfield deceleration + "
-        f"{STATIC_HOLD_FRAMES / FPS:.1f} s static hold = {TOTAL_FRAMES / FPS:.1f} s)."
+        f"{STATIC_HOLD_FRAMES / FPS:.1f} s static hold = {TOTAL_FRAMES / FPS:.1f} s; "
+        f"Dolby logo fade starts {DOLBY_LOGO_DELAY_AFTER_TITLE_FRAMES / FPS:.1f} s after title and lasts "
+        f"{DOLBY_LOGO_FADE_IN_FRAMES / FPS:.1f} s)."
     )
 
 
