@@ -332,8 +332,14 @@ function changeUiModeForWasmLoad() {
   $('#wasmSpinnerMessage, #loadingSpinnerMessage').empty();
 }
 
-function releaseNativeLaunchScreen(onReleased) {
+function releaseNativeLaunchScreen() {
+  var released = false;
+  var watchdog = null;
   var release = function() {
+    if (released) return;
+    released = true;
+    if (watchdog !== null) window.clearTimeout(watchdog);
+
     try {
       if (window.screen && typeof window.screen.show === 'function') {
         window.screen.show();
@@ -341,21 +347,19 @@ function releaseNativeLaunchScreen(onReleased) {
     } catch (error) {
       console.warn('%c[index.js, releaseNativeLaunchScreen]', 'color: gray;', 'Could not release the native TV splash screen:', error);
     }
-
-    if (typeof onReleased === 'function') {
-      onReleased();
-    }
   };
 
-  // The UI has already been restored. Allow it to pass through two render cycles,
-  // then dismiss the native splash immediately; never leave an arbitrary timer
-  // between UI readiness and the handoff.
+  // Let the browser reach a first UI frame, then release on the following frame
+  // so the interface has had a rendering opportunity underneath the native splash.
+  // The 300 ms watchdog is only a safety net if that following frame never arrives.
   if (typeof window.requestAnimationFrame === 'function') {
     window.requestAnimationFrame(function() {
+      watchdog = window.setTimeout(release, 300);
       window.requestAnimationFrame(release);
     });
   } else {
-    release();
+    // Tizen supports requestAnimationFrame; this is only a legacy fallback.
+    window.setTimeout(release, 0);
   }
 }
 
@@ -363,22 +367,21 @@ function maybeRestoreUiAfterStartup() {
   // A direct app-tile launch must never restore or navigate through the home UI.
   if (_directSmartHubLaunch) return;
 
-  // The stored host list is independent of the initial UI: render the interface as
-  // soon as HTTP setup and localization are ready, and populate hosts asynchronously.
-  if (!isStartupHttpReady || !isStartupLocaleReady || isStartupUiRestored) {
+  // The initial localized interface does not depend on HTTP/WASM initialization or
+  // the configured host list; both continue loading independently in the background.
+  if (!isStartupLocaleReady || isStartupUiRestored) {
     return;
   }
 
   isStartupUiRestored = true;
   restoreUiAfterWasmLoad();
 
-  // Show the prepared interface first, then keep the loading notice visible while
-  // the configured host list finishes loading/populating in the background.
-  releaseNativeLaunchScreen(function() {
-    // The host list may finish loading beneath the native splash; avoid showing
-    // a stale loading message after the hosts are already visible.
-    if (!isStartupHostsLoaded) showStartupHostsSnackbar();
-  });
+  // Put the loading notice into the UI before its first frame when host restoration
+  // is still in progress. The persisted hosts/network work can then finish underneath it.
+  if (!isStartupHostsLoaded) showStartupHostsSnackbar();
+
+  // Hide the native splash only after the browser has had a chance to draw the UI.
+  releaseNativeLaunchScreen();
 }
 
 function moduleDidLoad() {
@@ -687,7 +690,7 @@ function showHosts() {
 }
 
 function restoreUiAfterWasmLoad() {
-  // Release the first-render guard only after HTTP setup, localization, and the stored host list are ready.
+  // Show the localized UI immediately; host restoration and connectivity checks run independently.
   document.documentElement.classList.remove('app-starting');
 
   // Stop navigation before showing the loading screen
