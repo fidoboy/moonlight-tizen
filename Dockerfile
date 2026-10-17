@@ -8,13 +8,13 @@ RUN python3 /tmp/generate-launch-screen.py --template /tmp/launch-screen.svg --f
     rsvg-convert -w 1920 -h 1080 --format png -o /tmp/launch-screen.png /tmp/launch-screen-final.svg && \
     rsvg-convert -w 1080 -h 1920 --format png -o /tmp/launch-screen-portrait.png /tmp/launch-screen-portrait-final.svg && \
     ffmpeg -hide_banner -loglevel error -framerate 30 -i /tmp/launch-frames-landscape/frame-%03d.png -frames:v 258 \
-    -c:v libx264 -preset veryslow -tune stillimage -crf 18 -pix_fmt yuv420p \
+    -c:v libx264 -preset veryslow -tune stillimage -crf 20 -pix_fmt yuv420p \
     -profile:v baseline -level 4.0 -an -movflags +faststart -y /tmp/launch-screen.mp4 && \
-    test -s /tmp/launch-screen.mp4 && test "$(stat -c %s /tmp/launch-screen.mp4)" -lt 2097152 && \
+    test -s /tmp/launch-screen.mp4 && echo "Landscape splash MP4: $(stat -c %s /tmp/launch-screen.mp4) bytes" && test "$(stat -c %s /tmp/launch-screen.mp4)" -lt 2097152 && \
     ffmpeg -hide_banner -loglevel error -framerate 30 -i /tmp/launch-frames-portrait/frame-%03d.png -frames:v 258 \
-    -c:v libx264 -preset veryslow -tune stillimage -crf 18 -pix_fmt yuv420p \
+    -c:v libx264 -preset veryslow -tune stillimage -crf 20 -pix_fmt yuv420p \
     -profile:v baseline -level 4.0 -an -movflags +faststart -y /tmp/launch-screen-portrait.mp4 && \
-    test -s /tmp/launch-screen-portrait.mp4 && test "$(stat -c %s /tmp/launch-screen-portrait.mp4)" -lt 2097152 && \
+    test -s /tmp/launch-screen-portrait.mp4 && echo "Portrait splash MP4: $(stat -c %s /tmp/launch-screen-portrait.mp4) bytes" && test "$(stat -c %s /tmp/launch-screen-portrait.mp4)" -lt 2097152 && \
     test "$(stat -c %s /tmp/launch-screen.png)" -lt 204800 && \
     test "$(stat -c %s /tmp/launch-screen-portrait.png)" -lt 204800
 FROM ubuntu:22.04 AS sdk
