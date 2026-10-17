@@ -2,6 +2,12 @@ function remoteControllerHandler(e) {
   isGamepadActive = false;
   const keyCode = e.keyCode;
 
+  if (!isInGame && isStartupUiRestored &&
+      [tvKey.KEY_UP, tvKey.KEY_DOWN, tvKey.KEY_LEFT, tvKey.KEY_RIGHT,
+       tvKey.KEY_ENTER, tvKey.KEY_REMOTE_ENTER, tvKey.KEY_RETURN].indexOf(keyCode) !== -1) {
+    isStartupHostFocusResolved = true;
+  }
+
   switch (keyCode) {
     case tvKey.KEY_UP:
       // Navigate in the up direction

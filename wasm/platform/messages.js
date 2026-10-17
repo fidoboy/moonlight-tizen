@@ -303,6 +303,9 @@ function handleMessage(msg) {
     // Preserve the optional "quit host app after disconnect" behavior for graceful disconnects,
     // but always exit this client regardless of whether the stream ended normally or with an error.
     if (window._directSmartHubLaunch) {
+      if (typeof window.showDirectLaunchMessage === 'function') {
+        window.showDirectLaunchMessage('Connection terminated');
+      }
       var shouldQuitDirectHostApp = errorCode === 0 &&
         !!(window._directSmartHubSettings && window._directSmartHubSettings.quitAppAfterDisconnect);
       var exitDirectLaunch = function() {
@@ -313,8 +316,7 @@ function handleMessage(msg) {
         }
       };
       var finishDirectLaunch = function() {
-        // There is no status UI to paint in the direct-launch route.
-        window.setTimeout(exitDirectLaunch, 0);
+        window.setTimeout(exitDirectLaunch, 1200);
       };
 
       if (shouldQuitDirectHostApp && window.api && typeof window.api.quitApp === 'function') {
@@ -393,16 +395,18 @@ function handleMessage(msg) {
     }
 
   } else if (msg === 'Connection Established') {
-    // Prepare the video surface. The direct route keeps the native splash above it
-    // until displayVideo confirms the first frame is ready.
     $('#loadingSpinner').css('display', 'none');
     $('body').css('backgroundColor', 'transparent');
     if (window._directSmartHubLaunch) {
+      if (typeof window.showDirectLaunchMessage === 'function') {
+        window.showDirectLaunchMessage('Starting %1$s...', window._directSmartHubLaunch.appName || String(window._directSmartHubLaunch.appId));
+      }
       var directVideo = document.getElementById('wasm_module');
       if (directVideo) {
         directVideo.style.display = 'block';
         directVideo.focus();
       }
+      if (typeof window.hideNativeLaunchScreen === 'function') window.hideNativeLaunchScreen();
     } else {
       $('#wasm_module').css('display', '');
       $('#wasm_module').focus();
@@ -427,13 +431,12 @@ function handleMessage(msg) {
     }
   } else if (msg === 'displayVideo') {
     if (window._directSmartHubLaunch) {
-      // Only expose the stream after the first video frame is ready; this keeps the
-      // native launch splash covering all initialization and avoids a blank UI frame.
       var directVideo = document.getElementById('wasm_module');
       if (directVideo) {
         directVideo.style.display = 'block';
         directVideo.style.visibility = 'visible';
       }
+      if (typeof window.hideDirectLaunchMessage === 'function') window.hideDirectLaunchMessage();
       var releaseDirectSplash = function() {
         if (typeof window.hideNativeLaunchScreen === 'function') {
           window.hideNativeLaunchScreen();

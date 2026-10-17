@@ -20,6 +20,7 @@
  * call to sendMessage('startMdnsDiscovery').
  */
 function findNvService(ipString) {
+  return new Promise(function(resolveDiscovery) {
   // Discovery is IPv4-only: Tizen has no mDNS/NetBIOS/local DNS to resolve
   // .local hostnames, and the HTTP subnet scanner only produces IPv4 addresses.
   var ip = ipString.replace('ipv4:', '');
@@ -31,10 +32,11 @@ function findNvService(ipString) {
 
   // Poll the discovered host and verify host status before adding it
   discoveredHost.pollServer(function(returnedDiscoveredHost) {
-    // If the host is offline, do not add it to the grid or update its stored IP
     if (!returnedDiscoveredHost.online) {
+      resolveDiscovery();
       return;
     }
+    try {
     // Check if the host is already known by its server UID
     if (hosts[returnedDiscoveredHost.serverUid] != null) {
       // Host already known — update its stored IP if it has changed
@@ -66,6 +68,11 @@ function findNvService(ipString) {
       beginBackgroundPollingOfHost(returnedDiscoveredHost);
       saveHosts();
     }
+    } catch (error) {
+      console.warn('%c[main.js, findNvService]', 'color: orange;', 'Could not register a discovered host:', error);
+    }
+    resolveDiscovery();
+  });
   });
 }
 
@@ -87,6 +94,7 @@ window.abortSubnetScan = function() {
 };
 
 function startSubnetScanner() {
+  if (window._directSmartHubLaunch) return Promise.resolve();
   if (window.subnetScanPromise) {
     console.log('%c[main.js, startSubnetScanner]', 'color: orange;', 'Subnet scan already in progress, skipping new scan.');
     return window.subnetScanPromise;
@@ -122,13 +130,16 @@ function startSubnetScanner() {
       
       var index = 0;
       var activeCount = 0;
+      var pendingHostDiscoveries = [];
       var concurrency = 64; // Throttle to 64 to save Tizen's ARP queue
       
       function scanNext() {
         if (!window.subnetScanAbortCtrl || index >= IPs.length) {
           if (activeCount === 0) {
-            window.subnetScanPromise = null;
-            resolve();
+            Promise.all(pendingHostDiscoveries).then(function() {
+              window.subnetScanPromise = null;
+              resolve();
+            });
           }
           return;
         }
@@ -154,7 +165,11 @@ function startSubnetScanner() {
             clearTimeout(timeoutId);
             if (res.ok) {
               console.log('%c[main.js, startSubnetScanner]', 'color: green;', 'Found host with IP address:', ip);
-              findNvService('ipv4:' + ip);
+              pendingHostDiscoveries.push(
+                Promise.resolve(findNvService('ipv4:' + ip)).catch(function(error) {
+                  console.warn('%c[main.js, startSubnetScanner]', 'color: orange;', 'Host discovery handshake failed:', error);
+                })
+              );
             }
             if (window.subnetScanAbortCtrl) window.subnetScanAbortCtrl.signal.removeEventListener('abort', onGlobalAbort);
             activeCount--;

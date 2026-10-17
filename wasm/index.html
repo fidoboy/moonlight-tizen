@@ -47,15 +47,26 @@
       '<meta charset="UTF-8">',
       '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
       '<style>',
-      'html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;}',
+      'html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:Arial,sans-serif;}',
       '#listener{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;outline:none;}',
       '#wasm_module{position:absolute;left:50%;transform:translateX(-50%);border:0;outline:none;background:#000;}',
+      '#directLaunchMessage{display:none;position:fixed;inset:0;z-index:20;align-items:center;justify-content:center;box-sizing:border-box;padding:4vw;background:rgba(0,0,0,.72);color:#fff;font-size:30px;line-height:1.35;text-align:center;pointer-events:none;}',
+      '.dialog-overlay{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);}',
+      '.direct-stream-menu{box-sizing:border-box;width:36%;max-height:88%;overflow-y:auto;padding:22px;border-radius:16px;background:#333846;box-shadow:0 0 12px 6px rgba(0,163,198,1);color:#fff;}',
+      '.direct-stream-menu .mdl-dialog__title{margin:0 0 20px;font-size:26px;font-weight:400;}',
+      '.direct-stream-menu .mdl-dialog__content{display:flex;flex-direction:column;gap:10px;}',
+      '.direct-stream-menu .mdl-dialog__actions{display:flex;justify-content:flex-end;margin-top:18px;}',
+      '.direct-stream-menu button{width:100%;min-height:48px;padding:10px 14px;border:0;border-radius:4px;background:#465064;color:#fff;font-size:17px;text-align:left;}',
+      '.direct-stream-menu button.hovered,.direct-stream-menu button:focus{outline:2px solid #00a3c6;background:#007d99;}',
+      '#connection-warnings{position:fixed;top:3%;left:3%;z-index:15;display:none;max-width:94%;padding:12px 18px;background:rgba(0,0,0,.65);color:#fff;font-size:18px;}',
+      '#performance-stats{position:fixed;top:2%;left:2%;z-index:12;display:none;max-width:60%;white-space:pre-wrap;background:rgba(0,0,0,.65);color:#fff;font:16px monospace;}',
       '</style>',
       inlineScriptTag('window.__moonlightDirectLaunchPayload=' + payloadJson + ';'),
       scriptTag('platform.js'),
       scriptTag('$WEBAPIS/webapis/webapis.js'),
       scriptTag('static/js/jquery-2.2.0.min.js'),
       inlineScriptTag("window.t=function(message){var args=Array.prototype.slice.call(arguments,1);return String(message).replace(/%([0-9]+)[$]s/g,function(token,index){var value=args[Number(index)-1];return value==null?token:String(value);});};"),
+      scriptTag('platform/i18n.js'),
       scriptTag('platform/messages.js'),
       scriptTag('platform/audio.js'),
       scriptTag('platform/index.js'),
@@ -63,12 +74,16 @@
       scriptTag('platform/common.js'),
       '</head><body>',
       '<div id="listener" tabindex="-1"></div>',
+      '<div id="directLaunchMessage" role="status" aria-live="polite"></div>',
+      '<div id="connection-warnings"></div>',
+      '<div id="performance-stats"></div>',
       '<video id="wasm_module" autoplay tabindex="-1" style="display:none"></video>',
       '</body></html>'
     ];
 
-    // No settings page, summary bar, snackbar, localization init, UI CSS,
-    // navigation views, or mDNS discovery code is loaded for this route.
+    // No home/settings UI, summary bar, snackbar, navigation framework, or mDNS
+    // discovery code is loaded for this route. Localization supports stream
+    // messages and the on-demand stream menu only.
     document.open();
     document.write(parts.join(''));
     document.close();

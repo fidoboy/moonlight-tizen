@@ -1,25 +1,25 @@
 // Tizen's native splash overlays the normal WebUI until hideNativeLaunchScreen() is called.
 
-// Initialize global variables and constants
-var appInfo = tizen.application.getAppInfo(); // Retrieve the application information
-var platformVer = tizen.systeminfo.getCapability("http://tizen.org/feature/platform.version"); // Retrieve the device platform version
-var modelSeries = webapis.productinfo.getModel(); // Retrieve the device model series
-var modelName = webapis.productinfo.getRealModel(); // Retrieve the device model name
-var modelGroup = webapis.productinfo.getModelCode(); // Retrieve the device model group
-var is4kPanel = typeof webapis.productinfo.isUdPanelSupported === 'function' && webapis.productinfo.isUdPanelSupported(); // Check if the device supports 4K panel
-var is8kPanel = typeof webapis.productinfo.is8KPanelSupported === 'function' && webapis.productinfo.is8KPanelSupported(); // Check if the device supports 8K panel
+// Resolve Smart Hub app-tile payload before optional TV-specific queries.
+var _directSmartHubLaunch = window.__moonlightDirectLaunchPayload || getSmartHubLaunchPayload();
+var appInfo = _directSmartHubLaunch ? null : tizen.application.getAppInfo();
+var platformVer = _directSmartHubLaunch ? '9.0' : tizen.systeminfo.getCapability("http://tizen.org/feature/platform.version");
+var modelSeries = _directSmartHubLaunch ? '' : webapis.productinfo.getModel();
+var modelName = _directSmartHubLaunch ? '' : webapis.productinfo.getRealModel();
+var modelGroup = _directSmartHubLaunch ? '' : webapis.productinfo.getModelCode();
+var is4kPanel = !_directSmartHubLaunch && typeof webapis.productinfo.isUdPanelSupported === 'function' && webapis.productinfo.isUdPanelSupported();
+var is8kPanel = !_directSmartHubLaunch && typeof webapis.productinfo.is8KPanelSupported === 'function' && webapis.productinfo.is8KPanelSupported();
 
-var maxSupportedWidth = 1920;
-var maxSupportedHeight = 1080;
+var maxSupportedWidth = _directSmartHubLaunch ? 7680 : 1920;
+var maxSupportedHeight = _directSmartHubLaunch ? 4320 : 1080;
 try {
-  if (is8kPanel) {
+  if (!_directSmartHubLaunch && is8kPanel) {
     maxSupportedWidth = 7680;
     maxSupportedHeight = 4320;
-  } else if (is4kPanel) {
+  } else if (!_directSmartHubLaunch && is4kPanel) {
     maxSupportedWidth = 3840;
     maxSupportedHeight = 2160;
-  } else {
-    // Check if the physical screen resolution happens to be 1440p
+  } else if (!_directSmartHubLaunch) {
     if (window.screen.width >= 2560 || window.screen.height >= 1440) {
       maxSupportedWidth = 2560;
       maxSupportedHeight = 1440;
@@ -28,10 +28,12 @@ try {
 } catch (e) {
   console.error("Error fetching panel capabilities: " + e.message);
 }
-var isHdrCapable = webapis.avinfo.isHdrTvSupport(); // Check if the device supports HDR
+var isHdrCapable = _directSmartHubLaunch ? true : webapis.avinfo.isHdrTvSupport();
 var hosts = {}; // Hosts is an associative array of NvHTTP objects, keyed by server UID
 var isHostOpening = false; // Prevents concurrent hostChosen executions, initial value is false
 var isHostsLoaded = false; // Indicates if IndexedDB has finished loading hosts
+var isStartupHostFocusResolved = false; // Prevent late scans from stealing focus after user input
+var isStartupInitialHostChecksDone = false;
 var isStartupHttpReady = false;
 var isStartupHostsLoaded = false;
 var startupHostsSnackbarVisible = false;
@@ -93,7 +95,7 @@ var _previewApps = {}; // Per-host app cache for Smart Hub Preview: {serverUid: 
 var _isSmartHubSupported = false; // Flag indicating if Smart Hub Preview is supported on this device
 
 // Experimental direct launch state for Smart Hub app tiles.
-var _directSmartHubLaunch = null;
+var _directSmartHubLaunch;
 var _directSmartHubHost = null;
 var _directSmartHubHostReady = false;
 var _directSmartHubSettingsReady = false;
@@ -456,6 +458,42 @@ function delayedNavigation(callback) {
 }
 
 // Updates the host status indicator based on the host's online and paired status
+function focusFirstOnlineHostAfterStartup(finalizeIfNone) {
+  if (_directSmartHubLaunch || isStartupHostFocusResolved || !isStartupUiRestored ||
+      !isHostsLoaded || !isStartupInitialHostChecksDone || isInGame || isDialogOpen) return false;
+
+  var hostGrid = document.getElementById('host-grid');
+  if (!hostGrid || !window.Views || !Views.Hosts || !window.Navigation) return false;
+  var children = hostGrid.children;
+  var target = null;
+
+  for (var i = 0; i < children.length; i++) {
+    var card = children[i];
+    if (!card || !card.id || card.id.indexOf('host-container-') !== 0) continue;
+    var host = hosts[card.id.slice('host-container-'.length)];
+    if (host && host.online) {
+      target = card;
+      break;
+    }
+  }
+
+  if (!target) {
+    if (finalizeIfNone) isStartupHostFocusResolved = true;
+    return false;
+  }
+
+  var current = Views.Hosts.view.current();
+  if (current && current !== target && typeof unmark === 'function') unmark(current);
+  var targetIndex = Array.prototype.indexOf.call(children, target);
+  if (targetIndex < 0) return false;
+
+  Views.Hosts.view.index = targetIndex;
+  Navigation.switch();
+  Navigation.switch();
+  isStartupHostFocusResolved = true;
+  return true;
+}
+
 function updateHostStatusIndicator(host) {
   // Find the desired host cell using the server UUID
   var hostCell = document.querySelector('#host-' + host.serverUid);
@@ -493,6 +531,7 @@ function updateHostStatusIndicator(host) {
 }
 
 function beginBackgroundPollingOfHost(host) {
+  if (_directSmartHubLaunch) return Promise.resolve();
   // Clear any existing polling interval for this host before starting a new one.
   // Without this, every call to beginBackgroundPollingOfHost (e.g. on each navigation
   // back to the host view) would leak the old setInterval, causing multiple overlapping
@@ -566,6 +605,7 @@ function beginBackgroundPollingOfHost(host) {
 }
 
 function startPollingHosts() {
+  if (_directSmartHubLaunch) return Promise.resolve([]);
   var pollPromises = [];
   for (var hostUID in hosts) {
     pollPromises.push(beginBackgroundPollingOfHost(hosts[hostUID]));
@@ -711,6 +751,7 @@ function showHosts() {
 }
 
 function restoreUiAfterWasmLoad() {
+  if (_directSmartHubLaunch) return;
   // Show the localized UI immediately; host restoration and connectivity checks run independently.
   document.documentElement.classList.remove('app-starting');
 
@@ -728,6 +769,8 @@ function restoreUiAfterWasmLoad() {
   Navigation.switch();
   Navigation.switch();
   updateConfigSummaryBar();
+  // If host checks completed before the UI, apply their results after rendering.
+  focusFirstOnlineHostAfterStartup(false);
 
   // Find mDNS host discovered using ServiceFinder (network service discovery)
   // findNvService(function(finder, opt_error) {
@@ -2253,6 +2296,7 @@ function saveAutomaticUpdateChecks() {
 
 // Check for updates when the Check for Updates button is pressed
 function checkForAppUpdates() {
+  if (_directSmartHubLaunch) return;
   console.log('%c[index.js, checkForAppUpdates]', 'color: green;', 'Checking for new application updates...');
   snackbarLog('Checking for available Moonlight updates...');
   // Fetch the latest release data from the GitHub API
@@ -2277,6 +2321,7 @@ function checkForAppUpdates() {
 
 // Automatically perform a scheduled app update check at startup if the interval condition is met and notify the user
 function checkForAppUpdatesAtStartup() {
+  if (_directSmartHubLaunch) return;
   getData('automaticUpdateChecks', function(settings) {
     const storedValue = settings.automaticUpdateChecks;
     const enabled = storedValue == null || storedValue === true ||
@@ -3054,7 +3099,7 @@ function startGame(host, appID) {
     if (_directSmartHubLaunch) directSmartHubLaunchFailure(t('The selected host is no longer available on Moonlight.'));
     return;
   }
-  localStorage.setItem('lastOpenedApp_' + host.serverUid, appID);
+  if (!_directSmartHubLaunch) localStorage.setItem('lastOpenedApp_' + host.serverUid, appID);
 
   // Start the audio scheduler of the Web Audio backend while we are still running inside the
   // handler of the key press that started the stream, because the audio context of a device
@@ -3210,9 +3255,9 @@ function startGame(host, appID) {
       '\n Performance statistics: ' + performanceStats);
 
       if (_directSmartHubLaunch) {
-        // No home/stream-menu UI in the app-tile route. Prepare only the video surface.
         isInGame = true;
         fullscreenWasmModule();
+        showDirectLaunchMessage('Starting %1$s...', _directSmartHubLaunch.appName || appToStart.title);
         var directVideoElement = document.getElementById('wasm_module');
         if (directVideoElement) directVideoElement.style.display = 'none';
       } else {
@@ -3445,10 +3490,10 @@ function streamMenuDialog() {
     id: 'streamMenuDialogOverlay',
     class: 'dialog-overlay'
   }).appendTo(document.body);
-  var streamMenuDialog = $('<dialog>', {
-    id: 'streamMenuDialog',
-    class: 'mdl-dialog'
-  }).appendTo(streamMenuDialogOverlay);
+  var streamMenuDialog = (_directSmartHubLaunch
+    ? $('<div>', { id: 'streamMenuDialog', class: 'mdl-dialog direct-stream-menu' })
+    : $('<dialog>', { id: 'streamMenuDialog', class: 'mdl-dialog' })
+  ).appendTo(streamMenuDialogOverlay);
   $('<h3>', {
     id: 'streamMenuDialogTitle',
     class: 'mdl-dialog__title',
@@ -3486,16 +3531,23 @@ function streamMenuDialog() {
     closeStreamMenuDialog(true);
   }).appendTo(streamMenuDialogActions);
 
-  if (!streamMenuDialog[0].showModal) {
-    dialogPolyfill.registerDialog(streamMenuDialog[0]);
-  }
   if (document.pointerLockElement) {
     document.exitPointerLock();
   }
   window.addEventListener('mousemove', stopMouseMovePropagation, true);
   $(streamMenuDialogOverlay).css('display', 'flex');
-  streamMenuDialog[0].showModal();
   isDialogOpen = true;
+
+  if (_directSmartHubLaunch) {
+    directStreamMenuFocusIndex = 0;
+    focusDirectStreamMenuButton(0);
+    return;
+  }
+
+  if (!streamMenuDialog[0].showModal) {
+    dialogPolyfill.registerDialog(streamMenuDialog[0]);
+  }
+  streamMenuDialog[0].showModal();
   Views.StreamMenuDialog.view.index = 0;
   Navigation.start();
   Navigation.push(Views.StreamMenuDialog);
@@ -3507,10 +3559,14 @@ function closeStreamMenuDialog(returnToStream) {
   if (streamMenuDialogOverlay.length === 0) {
     return;
   }
-  Navigation.pop();
-  Navigation.stop();
+  if (!_directSmartHubLaunch) {
+    Navigation.pop();
+    Navigation.stop();
+  }
   window.removeEventListener('mousemove', stopMouseMovePropagation, true);
-  $('#streamMenuDialog')[0].close();
+  if (!_directSmartHubLaunch && $('#streamMenuDialog')[0]) {
+    $('#streamMenuDialog')[0].close();
+  }
   streamMenuDialogOverlay.remove();
   isDialogOpen = false;
   if (returnToStream) {
@@ -3529,6 +3585,12 @@ function stopMouseMovePropagation(e) {
 }
 
 function toggleStreamMenuDialog() {
+  if (_directSmartHubLaunch && !isDirectLocalizationReady && directLocalizationPromise) {
+    directLocalizationPromise.then(function() {
+      if (!isDirectStreamMenuOpen() && !isDialogOpen) toggleStreamMenuDialog();
+    });
+    return;
+  }
   if ($('#streamMenuDialogOverlay').length > 0) {
     closeStreamMenuDialog(true);
   } else if (!isDialogOpen && document.getElementById('wasm_module').style.display !== 'none') {
@@ -4470,8 +4532,99 @@ function restoreDefaultsSettingsValues() {
   storeData('automaticUpdateChecks', defaultAutomaticUpdateChecks, null);
 }
 
+var isDirectLocalizationReady = false;
+var directLocalizationPromise = null;
+var directLaunchMessageKey = null;
+var directLaunchMessageArgs = [];
+var directStreamMenuFocusIndex = 0;
+
+function showDirectLaunchMessage(messageKey) {
+  if (!_directSmartHubLaunch) return;
+  directLaunchMessageKey = messageKey;
+  directLaunchMessageArgs = Array.prototype.slice.call(arguments, 1);
+  var element = document.getElementById('directLaunchMessage');
+  if (!element) return;
+  element.textContent = t.apply(null, [messageKey].concat(directLaunchMessageArgs));
+  element.style.display = 'flex';
+}
+
+function hideDirectLaunchMessage() {
+  var element = document.getElementById('directLaunchMessage');
+  if (element) element.style.display = 'none';
+  directLaunchMessageKey = null;
+  directLaunchMessageArgs = [];
+}
+
+function initializeDirectLocalization() {
+  if (!_directSmartHubLaunch) return Promise.resolve();
+  if (directLocalizationPromise) return directLocalizationPromise;
+  if (!window.i18n || typeof window.i18n.init !== 'function') {
+    isDirectLocalizationReady = true;
+    directLocalizationPromise = Promise.resolve();
+    return directLocalizationPromise;
+  }
+
+  directLocalizationPromise = window.i18n.init().then(function(locale) {
+    isDirectLocalizationReady = true;
+    if (directLaunchMessageKey) {
+      showDirectLaunchMessage.apply(null, [directLaunchMessageKey].concat(directLaunchMessageArgs.slice()));
+    }
+    return locale;
+  }).catch(function(error) {
+    console.warn('%c[index.js, initializeDirectLocalization]', 'color: gray;', 'Using fallback text for direct streaming:', error);
+    isDirectLocalizationReady = true;
+  });
+  return directLocalizationPromise;
+}
+
+function isDirectStreamMenuOpen() {
+  return !!document.getElementById('streamMenuDialogOverlay');
+}
+
+function focusDirectStreamMenuButton(index) {
+  var buttons = document.querySelectorAll('#streamMenuDialog button');
+  if (!buttons.length) return;
+  directStreamMenuFocusIndex = (index + buttons.length) % buttons.length;
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].classList.toggle('hovered', i === directStreamMenuFocusIndex);
+  }
+  var target = buttons[directStreamMenuFocusIndex];
+  if (target && typeof target.focus === 'function') target.focus();
+}
+
+function activateDirectStreamMenuButton() {
+  var buttons = document.querySelectorAll('#streamMenuDialog button');
+  var target = buttons[directStreamMenuFocusIndex];
+  if (target && typeof target.click === 'function') target.click();
+}
+
 function directSmartHubRemoteControllerHandler(e) {
   if (!e || typeof tvKey === 'undefined') return;
+
+  if (isDirectStreamMenuOpen()) {
+    switch (e.keyCode) {
+      case tvKey.KEY_UP:
+        e.preventDefault();
+        focusDirectStreamMenuButton(directStreamMenuFocusIndex - 1);
+        return;
+      case tvKey.KEY_DOWN:
+        e.preventDefault();
+        focusDirectStreamMenuButton(directStreamMenuFocusIndex + 1);
+        return;
+      case tvKey.KEY_LEFT:
+      case tvKey.KEY_RIGHT:
+        e.preventDefault();
+        return;
+      case tvKey.KEY_ENTER:
+      case tvKey.KEY_REMOTE_ENTER:
+        e.preventDefault();
+        activateDirectStreamMenuButton();
+        return;
+      default:
+        break;
+    }
+  }
+
   switch (e.keyCode) {
     case tvKey.KEY_VOLUME_UP:
       tizen.tvaudiocontrol.setVolumeUp();
@@ -4551,10 +4704,16 @@ function initSpecialKeys() {
       e.preventDefault();
       e.stopPropagation();
       if (window._directSmartHubLaunch) {
-        // A direct launch has no stream menu. Back stops its single active stream.
-        if (e.type === 'keydown' && !e.repeat && isBackKey &&
-            typeof Module !== 'undefined' && typeof Module.stopStream === 'function') {
-          Module.stopStream();
+        if (e.type === 'keydown' && !e.repeat) {
+          if (isBackKey) {
+            if (isDirectStreamMenuOpen()) {
+              closeStreamMenuDialog(true);
+            } else if (typeof Module !== 'undefined' && typeof Module.stopStream === 'function') {
+              Module.stopStream();
+            }
+          } else if (isMediaKey) {
+            toggleStreamMenuDialog();
+          }
         }
         return;
       }
@@ -4612,6 +4771,7 @@ function loadSystemInfo() {
 }
 
 function loadUserData() {
+  if (_directSmartHubLaunch) return;
   console.log('%c[index.js, loadUserData]', 'color: green;', 'Loading stored user data...');
   openIndexDB(loadUserDataCb);
 }
@@ -5082,6 +5242,11 @@ function loadHTTPCertsCb() {
           console.error('%c[index.js, loadHTTPCertsCb]', 'color: green;', 'Initial configured-host checks failed:', error);
         });
 
+        initialHostChecks.then(function() {
+          isStartupInitialHostChecksDone = true;
+          focusFirstOnlineHostAfterStartup(false);
+        });
+
         // The stored host list is already rendered. Show it while network checks run.
         isStartupHostsLoaded = true;
         dismissStartupHostsSnackbar();
@@ -5092,15 +5257,16 @@ function loadHTTPCertsCb() {
             snackbarLog('Scanning the local network to discover new hosts...');
             // Stop background polling while sweeping the subnet to prevent network exhaustion
             stopPollingHosts();
-            startSubnetScanner().then(() => {
+            var finishStartupSubnetScan = function() {
               isSubnetScanFinished = true;
-              startPollingHosts();
-            }).catch(() => {
-              isSubnetScanFinished = true;
-              startPollingHosts();
-            });
+              startPollingHosts().then(function() {
+                focusFirstOnlineHostAfterStartup(true);
+              });
+            };
+            startSubnetScanner().then(finishStartupSubnetScan).catch(finishStartupSubnetScan);
           } else {
             isSubnetScanFinished = true;
+            focusFirstOnlineHostAfterStartup(true);
           }
         });
       });
@@ -5420,8 +5586,7 @@ function getSmartHubLaunchPayload() {
   return null;
 }
 
-// The early entrypoint supplies direct payloads before this runtime is loaded.
-_directSmartHubLaunch = window.__moonlightDirectLaunchPayload || getSmartHubLaunchPayload();
+// Launch mode is resolved before optional TV-information queries above.
 
 function directSmartHubLaunchFailure(message) {
   if (!_directSmartHubLaunch || _directSmartHubLaunchFailed) return;
@@ -5479,6 +5644,7 @@ function loadDirectSmartHubSettings() {
   });
 
   openIndexDB(function() {
+    initializeDirectLocalization();
     var remaining = keys.length;
     keys.forEach(function(key) {
       getData(key, function(saved) {
@@ -5495,10 +5661,7 @@ function loadDirectSmartHubSettings() {
         if (remaining !== 0) return;
 
         var width = parseInt(String(settings.resolution).split(':')[0], 10);
-        if (!width || width > maxSupportedWidth) {
-          settings.resolution = maxSupportedWidth >= 3840 ? '3840:2160' : '1920:1080';
-          storeData('resolution', settings.resolution, null);
-        }
+        if (!width || width > maxSupportedWidth) settings.resolution = '1920:1080';
         var bitrate = parseFloat(settings.bitrate);
         if (!isFinite(bitrate) || bitrate <= 0) settings.bitrate = '10';
         var jitter = parseInt(settings.audioJitter, 10);
@@ -5506,10 +5669,7 @@ function loadDirectSmartHubSettings() {
 
         if (settings.ac3AudioMode) {
           settings.audioBackend = 'EMSS';
-          if (settings.audioConfig === '71Surround') {
-            settings.audioConfig = '51Surround';
-            storeData('audioConfig', settings.audioConfig, null);
-          }
+          if (settings.audioConfig === '71Surround') settings.audioConfig = '51Surround';
         }
 
         _directSmartHubSettings = settings;
@@ -5538,12 +5698,12 @@ function maybeStartDirectSmartHubLaunch() {
     }
     host.online = true;
     api = host;
-    localStorage.setItem('lastOpenedHost', host.serverUid);
     startGame(host, _directSmartHubLaunch.appId);
   });
 }
 
 function probeSmartHubSupport() {
+  if (_directSmartHubLaunch) return Promise.resolve(false);
   return new Promise(function(resolve) {
     // Check localStorage cache first
     var cached = localStorage.getItem('smartHubSupported');

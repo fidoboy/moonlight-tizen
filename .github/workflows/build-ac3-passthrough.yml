@@ -52,6 +52,18 @@ jobs:
           node --check wasm/platform/index.js
           node tests/gamepad_mask_test.js
           node --check wasm/platform/messages.js
+          node --check wasm/platform/remote_controller.js
+          node --check wasm/static/js/mdns-browser/main.js
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          html = Path("wasm/index.html").read_text(encoding="utf-8")
+          match = re.search(r'<script type="text/javascript">\s*(.*?)\s*</script>', html, re.S)
+          if not match:
+              raise SystemExit("Could not find the entrypoint script in wasm/index.html")
+          Path("/tmp/moonlight-entrypoint.js").write_text(match.group(1), encoding="utf-8")
+          PY
+          node --check /tmp/moonlight-entrypoint.js
           node --check wasm/static/js/i18n-sync.js
           python3 - <<'PY'
           import json
