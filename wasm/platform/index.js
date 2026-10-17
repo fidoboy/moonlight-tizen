@@ -97,6 +97,8 @@ var _directSmartHubLaunch = null;
 var _directSmartHubHost = null;
 var _directSmartHubHostReady = false;
 var _directSmartHubSettingsReady = false;
+var _directSmartHubSettingsLoading = false;
+var _directSmartHubSettings = null;
 var _directSmartHubLaunchStarted = false;
 var _directSmartHubLaunchFailed = false;
 
@@ -165,6 +167,15 @@ function initializeDisabledSwitchAppearance() {
 
 // Called by the common.js module
 function attachListeners() {
+  // The direct route supplies only the runtime elements needed by the stream.
+  // Do not initialize the home UI, localization, settings listeners, or discovery.
+  if (_directSmartHubLaunch) {
+    if (typeof Controller !== 'undefined' && typeof Controller.startWatching === 'function') {
+      Controller.startWatching();
+    }
+    return;
+  }
+
   initializeDisabledSwitchAppearance();
   changeUiModeForWasmLoad();
 
@@ -3009,17 +3020,21 @@ function showStreamMode() {
 
 // Maximize the size of the Wasm module by scaling and resizing appropriately
 function fullscreenWasmModule() {
-  var streamWidth = $('#selectResolution').data('value').split(':')[0];
-  var streamHeight = $('#selectResolution').data('value').split(':')[1];
+  var resolution = (_directSmartHubLaunch && _directSmartHubSettings)
+    ? _directSmartHubSettings.resolution
+    : $('#selectResolution').data('value');
+  var dimensions = String(resolution || '1280:720').split(':');
+  var streamWidth = dimensions[0];
+  var streamHeight = dimensions[1];
   var screenWidth = window.innerWidth;
   var screenHeight = window.innerHeight;
 
   var xRatio = screenWidth / streamWidth;
   var yRatio = screenHeight / streamHeight;
-
   var zoom = Math.min(xRatio, yRatio);
 
-  var module = $('#wasm_module')[0];
+  var module = document.getElementById('wasm_module');
+  if (!module) return;
   module.width = zoom * streamWidth;
   module.height = zoom * streamHeight;
   module.style.marginTop = ((screenHeight - module.height) / 2) + 'px';
@@ -3110,33 +3125,69 @@ function startGame(host, appID) {
         return;
       }
 
-      // Retrieve all stream configuration options from the Settings view
-      var streamWidth = $('#selectResolution').data('value').split(':')[0];
-      var streamHeight = $('#selectResolution').data('value').split(':')[1];
-      var frameRate = $('#selectFramerate').data('value').toString();
-      var bitrate = parseFloat($('#bitrateSlider').val()) * 1000;
+      // Direct app tiles read the stream configuration from IndexedDB, not from
+      // the Settings page, which is not part of the direct-launch document.
+      var directSettings = _directSmartHubLaunch ? _directSmartHubSettings : null;
+      var resolutionValue = directSettings ? directSettings.resolution : $('#selectResolution').data('value');
+      var resolutionParts = String(resolutionValue || '1280:720').split(':');
+      var streamWidth = resolutionParts[0];
+      var streamHeight = resolutionParts[1];
+      var frameRate = directSettings ? String(directSettings.frameRate) : $('#selectFramerate').data('value').toString();
+      var bitrate = parseFloat(directSettings ? directSettings.bitrate : $('#bitrateSlider').val()) * 1000;
       var rikey = generateRemoteInputKey();
       var rikeyid = generateRemoteInputKeyId();
       var gamepadMask = getConnectedGamepadMask();
-      const framePacing = $('#framePacingSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const optimizeGames = $('#optimizeGamesSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const rumbleFeedback = $('#rumbleFeedbackSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const mouseEmulation = $('#mouseEmulationSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const flipABfaceButtons = $('#flipABfaceButtonsSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const flipXYfaceButtons = $('#flipXYfaceButtonsSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const opticalOutputEnabled = $('#ac3AudioModeSwitch').parent().hasClass('is-checked');
-      var audioBackend = opticalOutputEnabled ? 'EMSS' : $('#selectAudioBackend').data('value').toString();
-      var audioConfig = $('#selectAudio').data('value').toString();
-      const audioSync = $('#audioSyncSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const audioJitter = parseInt($('#jitterSlider').val());
-      const playHostAudio = $('#playHostAudioSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const decryptHostAudio = $('#decryptHostAudioSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      var videoCodec = $('#selectCodec').data('value').toString();
-      const hdrMode = $('#hdrModeSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const fullRange = $('#fullRangeSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const gameMode = $('#gameModeSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const disableWarnings = $('#disableWarningsSwitch').parent().hasClass('is-checked') ? 1 : 0;
-      const performanceStats = $('#performanceStatsSwitch').parent().hasClass('is-checked') ? 1 : 0;
+      const framePacing = directSettings
+        ? (directSettings.framePacing ? 1 : 0)
+        : ($('#framePacingSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const optimizeGames = directSettings
+        ? (directSettings.optimizeGames ? 1 : 0)
+        : ($('#optimizeGamesSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const rumbleFeedback = directSettings
+        ? (directSettings.rumbleFeedback ? 1 : 0)
+        : ($('#rumbleFeedbackSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const mouseEmulation = directSettings
+        ? (directSettings.mouseEmulation ? 1 : 0)
+        : ($('#mouseEmulationSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const flipABfaceButtons = directSettings
+        ? (directSettings.flipABfaceButtons ? 1 : 0)
+        : ($('#flipABfaceButtonsSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const flipXYfaceButtons = directSettings
+        ? (directSettings.flipXYfaceButtons ? 1 : 0)
+        : ($('#flipXYfaceButtonsSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const opticalOutputEnabled = directSettings
+        ? !!directSettings.ac3AudioMode
+        : $('#ac3AudioModeSwitch').parent().hasClass('is-checked');
+      var audioBackend = directSettings
+        ? (opticalOutputEnabled ? 'EMSS' : directSettings.audioBackend)
+        : (opticalOutputEnabled ? 'EMSS' : $('#selectAudioBackend').data('value').toString());
+      var audioConfig = directSettings ? directSettings.audioConfig : $('#selectAudio').data('value').toString();
+      const audioSync = directSettings
+        ? (directSettings.audioSync ? 1 : 0)
+        : ($('#audioSyncSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const audioJitter = parseInt(directSettings ? directSettings.audioJitter : $('#jitterSlider').val(), 10);
+      const playHostAudio = directSettings
+        ? (directSettings.playHostAudio ? 1 : 0)
+        : ($('#playHostAudioSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const decryptHostAudio = directSettings
+        ? (directSettings.decryptHostAudio ? 1 : 0)
+        : ($('#decryptHostAudioSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      var videoCodec = directSettings ? directSettings.videoCodec : $('#selectCodec').data('value').toString();
+      const hdrMode = directSettings
+        ? (directSettings.hdrMode ? 1 : 0)
+        : ($('#hdrModeSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const fullRange = directSettings
+        ? (directSettings.fullRange ? 1 : 0)
+        : ($('#fullRangeSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const gameMode = directSettings
+        ? (directSettings.gameMode ? 1 : 0)
+        : ($('#gameModeSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const disableWarnings = directSettings
+        ? (directSettings.disableWarnings ? 1 : 0)
+        : ($('#disableWarningsSwitch').parent().hasClass('is-checked') ? 1 : 0);
+      const performanceStats = directSettings
+        ? (directSettings.performanceStats ? 1 : 0)
+        : ($('#performanceStatsSwitch').parent().hasClass('is-checked') ? 1 : 0);
 
       console.log('%c[index.js, startGame]', 'color: green;', 'startRequest:' + 
       '\n Host address: ' + host.address + ':' + host.httpPort + 
@@ -3162,12 +3213,17 @@ function startGame(host, appID) {
       '\n Disable connection warnings: ' + disableWarnings + 
       '\n Performance statistics: ' + performanceStats);
 
-      // Hide on-screen overlays until the streaming session begins
-      $('#connection-warnings, #performance-stats').css('background', 'transparent').text('');
-
-      // Shows a loading message to launch the application and start stream mode
-      $('#loadingSpinnerMessage').text(t('Starting %1$s...', appToStart.title));
-      showStreamMode();
+      if (_directSmartHubLaunch) {
+        // No home/stream-menu UI in the app-tile route. Prepare only the video surface.
+        isInGame = true;
+        fullscreenWasmModule();
+        var directVideoElement = document.getElementById('wasm_module');
+        if (directVideoElement) directVideoElement.style.display = 'none';
+      } else {
+        $('#connection-warnings, #performance-stats').css('background', 'transparent').text('');
+        $('#loadingSpinnerMessage').text(t('Starting %1$s...', appToStart.title));
+        showStreamMode();
+      }
 
       // Check if user wants to resume the already-running app
       if (host.currentGame == appID) {
@@ -3961,6 +4017,10 @@ function updateAudioBackendSettings() {
 
 // Check whether the Web Audio backend is the currently selected audio backend
 function isWebAudioBackendSelected() {
+  if (_directSmartHubLaunch && _directSmartHubSettings) {
+    return !_directSmartHubSettings.ac3AudioMode &&
+      _directSmartHubSettings.audioBackend === 'WebAudio';
+  }
   return $('#selectAudioBackend').data('value') === 'WebAudio';
 }
 
@@ -4414,6 +4474,34 @@ function restoreDefaultsSettingsValues() {
   storeData('automaticUpdateChecks', defaultAutomaticUpdateChecks, null);
 }
 
+function directSmartHubRemoteControllerHandler(e) {
+  if (!e || typeof tvKey === 'undefined') return;
+  switch (e.keyCode) {
+    case tvKey.KEY_VOLUME_UP:
+      tizen.tvaudiocontrol.setVolumeUp();
+      break;
+    case tvKey.KEY_VOLUME_DOWN:
+      tizen.tvaudiocontrol.setVolumeDown();
+      break;
+    case tvKey.KEY_VOLUME_MUTE:
+      tizen.tvaudiocontrol.setMute();
+      break;
+    case tvKey.KEY_RED:
+      if (isInGame && typeof Module !== 'undefined' && typeof Module.stopStream === 'function') {
+        Module.stopStream();
+      }
+      break;
+    case tvKey.KEY_YELLOW:
+      if (isInGame && typeof Module !== 'undefined' && typeof Module.toggleStats === 'function') {
+        Module.toggleStats();
+      }
+      break;
+    default:
+      // Keep directional/game controls directed to the focused stream surface.
+      break;
+  }
+}
+
 function initSamsungKeys() {
   console.log('%c[index.js, initSamsungKeys]', 'color: green;', 'Initializing TV keys...');
 
@@ -4437,7 +4525,9 @@ function initSamsungKeys() {
       'MediaPause',
       'MediaPlay',
     ],
-    onKeydownListener: remoteControllerHandler
+    onKeydownListener: _directSmartHubLaunch
+      ? directSmartHubRemoteControllerHandler
+      : remoteControllerHandler
   };
 
   console.log('%c[index.js, initSamsungKeys]', 'color: green;', 'Initializing TV platform...');
@@ -4464,6 +4554,14 @@ function initSpecialKeys() {
 
       e.preventDefault();
       e.stopPropagation();
+      if (window._directSmartHubLaunch) {
+        // A direct launch has no stream menu. Back stops its single active stream.
+        if (e.type === 'keydown' && !e.repeat && isBackKey &&
+            typeof Module !== 'undefined' && typeof Module.stopStream === 'function') {
+          Module.stopStream();
+        }
+        return;
+      }
       if (e.type === 'keydown' && !e.repeat) {
         toggleStreamMenuDialog();
       }
@@ -4945,8 +5043,7 @@ function loadHTTPCertsCb() {
           hosts = {};
           hosts[targetUID] = directHost;
           _directSmartHubHost = directHost;
-          // The saved host name is available without an extra network request.
-          updateDirectSmartHubStartingStatus(directHost.hostname);
+          // Use only the host identified by the Smart Hub payload.
           _directSmartHubHostReady = true;
           isHostsLoaded = true;
           maybeStartDirectSmartHubLaunch();
@@ -5323,39 +5420,15 @@ function getSmartHubLaunchPayload() {
   return null;
 }
 
-// Capture before WebAssembly can begin host initialization.
-_directSmartHubLaunch = getSmartHubLaunchPayload();
-
-function setDirectSmartHubStatus(message) {
-  if (!_directSmartHubLaunch) return;
-  var statusElement = document.getElementById('directSmartHubStatus');
-  if (!statusElement) return;
-  statusElement.textContent = message;
-  statusElement.style.display = 'flex';
-}
-
-function updateDirectSmartHubStartingStatus(hostName) {
-  if (!_directSmartHubLaunch) return;
-  var appName = _directSmartHubLaunch.appName || 'aplicación';
-  var normalizedHostName = (typeof hostName === 'string') ? hostName.trim() : '';
-  setDirectSmartHubStatus('Iniciando ' + appName +
-    (normalizedHostName ? ' en ' + normalizedHostName : '') + '...');
-}
-
-function hideDirectSmartHubStatus() {
-  var statusElement = document.getElementById('directSmartHubStatus');
-  if (statusElement) statusElement.style.display = 'none';
-}
-
-if (_directSmartHubLaunch) {
-  // Show the app immediately, then add the host name when the saved host is restored.
-  updateDirectSmartHubStartingStatus(null);
-}
+// The early entrypoint supplies direct payloads before this runtime is loaded.
+_directSmartHubLaunch = window.__moonlightDirectLaunchPayload || getSmartHubLaunchPayload();
 
 function directSmartHubLaunchFailure(message) {
   if (!_directSmartHubLaunch || _directSmartHubLaunchFailed) return;
   _directSmartHubLaunchFailed = true;
   console.error('%c[index.js, directSmartHubLaunchFailure]', 'color: red;', message);
+  // Release the native splash only on failure so its error dialog is visible.
+  try { hideNativeLaunchScreen(); } catch (error) {}
   window.setTimeout(function() {
     try {
       window.alert(message || 'Unable to launch the selected app.');
@@ -5366,6 +5439,85 @@ function directSmartHubLaunchFailure(message) {
       catch (error) { console.error('%c[index.js, directSmartHubLaunchFailure]', 'color: red;', 'Could not exit Moonlight:', error); }
     }
   }, 0);
+}
+
+function loadDirectSmartHubSettings() {
+  if (!_directSmartHubLaunch || _directSmartHubSettingsLoading) return;
+  _directSmartHubSettingsLoading = true;
+
+  // Read only preferences needed to construct the streaming request. The direct
+  // route never loads the settings DOM, language preference, or UI-only options.
+  var defaults = {
+    resolution: '1280:720',
+    frameRate: '60',
+    bitrate: '10',
+    framePacing: false,
+    optimizeGames: false,
+    rumbleFeedback: false,
+    mouseEmulation: false,
+    flipABfaceButtons: false,
+    flipXYfaceButtons: false,
+    ac3AudioMode: false,
+    audioBackend: 'EMSS',
+    audioConfig: 'Stereo',
+    audioSync: false,
+    audioJitter: '100',
+    playHostAudio: false,
+    decryptHostAudio: false,
+    videoCodec: 'H264',
+    hdrMode: false,
+    fullRange: false,
+    gameMode: (parseFloat(platformVer) >= 9.0 || parseFloat(platformVer) === 5.5) ? false : true,
+    quitAppAfterDisconnect: false,
+    // No warning/statistics UI is loaded in this route.
+    disableWarnings: true,
+    performanceStats: false
+  };
+  var settings = Object.assign({}, defaults);
+  var keys = Object.keys(defaults).filter(function(key) {
+    return key !== 'disableWarnings' && key !== 'performanceStats';
+  });
+
+  openIndexDB(function() {
+    var remaining = keys.length;
+    keys.forEach(function(key) {
+      getData(key, function(saved) {
+        var value = saved ? saved[key] : null;
+        if (value !== null && value !== undefined) {
+          if (typeof defaults[key] === 'boolean') {
+            settings[key] = value === true || value === 'true' || value === 1;
+          } else {
+            settings[key] = String(value);
+          }
+        }
+
+        remaining--;
+        if (remaining !== 0) return;
+
+        var width = parseInt(String(settings.resolution).split(':')[0], 10);
+        if (!width || width > maxSupportedWidth) {
+          settings.resolution = maxSupportedWidth >= 3840 ? '3840:2160' : '1920:1080';
+          storeData('resolution', settings.resolution, null);
+        }
+        var bitrate = parseFloat(settings.bitrate);
+        if (!isFinite(bitrate) || bitrate <= 0) settings.bitrate = '10';
+        var jitter = parseInt(settings.audioJitter, 10);
+        settings.audioJitter = isFinite(jitter) && jitter >= 0 ? String(jitter) : '100';
+
+        if (settings.ac3AudioMode) {
+          settings.audioBackend = 'EMSS';
+          if (settings.audioConfig === '71Surround') {
+            settings.audioConfig = '51Surround';
+            storeData('audioConfig', settings.audioConfig, null);
+          }
+        }
+
+        _directSmartHubSettings = settings;
+        _directSmartHubSettingsReady = true;
+        maybeStartDirectSmartHubLaunch();
+      });
+    });
+  });
 }
 
 function maybeStartDirectSmartHubLaunch() {
@@ -5605,17 +5757,15 @@ function onWindowLoad() {
   console.log('%c[index.js, onWindowLoad]', 'color: green;', 'Moonlight\'s main window loaded.');
   initSamsungKeys();
   initSpecialKeys();
-  loadUserData();
 
   if (_directSmartHubLaunch) {
     console.log('%c[index.js, onWindowLoad]', 'color: green;', 'Direct Smart Hub app launch detected: ' + JSON.stringify(_directSmartHubLaunch));
-    try {
-      if (window.screen && typeof window.screen.show === 'function') window.screen.show();
-    } catch (error) {
-      console.warn('%c[index.js, onWindowLoad]', 'color: gray;', 'Could not dismiss native launch screen early:', error);
-    }
+    // Read only the saved stream preferences; keep the native splash until video is ready.
+    loadDirectSmartHubSettings();
     return;
   }
+
+  loadUserData();
 
   // Complete normal UI component setup before the native splash can be released.
   if (window.componentHandler && typeof window.componentHandler.upgradeDom === 'function') {

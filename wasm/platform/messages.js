@@ -286,8 +286,8 @@ function handleMessage(msg) {
   console.log('%c[messages.js, handleMessage]', 'color: gray;', 'Message data: ', msg);
   // If it's a recognized event, notify the appropriate function
   if (msg.indexOf('streamTerminated: ') === 0) {
-    // Close the Stream Menu if it is open
-    closeStreamMenuDialog(false);
+    // The minimal direct-launch document has no stream menu.
+    if (!window._directSmartHubLaunch) closeStreamMenuDialog(false);
     // Release the audio scheduler of the Web Audio backend, which is a no-op for the EMSS backend
     stopAudioScheduler();
     // Remove the on-screen overlays
@@ -303,18 +303,8 @@ function handleMessage(msg) {
     // Preserve the optional "quit host app after disconnect" behavior for graceful disconnects,
     // but always exit this client regardless of whether the stream ended normally or with an error.
     if (window._directSmartHubLaunch) {
-      // Paint a minimal status message before exiting; do not restore the home UI.
-      if (typeof window.setDirectSmartHubStatus === 'function') {
-        var directLaunchHostName = window._directSmartHubLaunch && window._directSmartHubLaunch.hostName;
-        if (!directLaunchHostName && window._directSmartHubHost) {
-          directLaunchHostName = window._directSmartHubHost.hostname;
-        }
-        window.setDirectSmartHubStatus(directLaunchHostName
-          ? 'Finalizando transmisión con ' + directLaunchHostName + '...'
-          : 'Cerrando la transmisión...');
-      }
       var shouldQuitDirectHostApp = errorCode === 0 &&
-        $('#quitAppAfterDisconnectSwitch').parent().hasClass('is-checked');
+        !!(window._directSmartHubSettings && window._directSmartHubSettings.quitAppAfterDisconnect);
       var exitDirectLaunch = function() {
         try {
           tizen.application.getCurrentApplication().exit();
@@ -323,13 +313,8 @@ function handleMessage(msg) {
         }
       };
       var finishDirectLaunch = function() {
-        // Give the browser one paint opportunity so the status is visible even when
-        // no host-app quit request is needed.
-        if (typeof window.requestAnimationFrame === 'function') {
-          window.requestAnimationFrame(exitDirectLaunch);
-        } else {
-          window.setTimeout(exitDirectLaunch, 0);
-        }
+        // There is no status UI to paint in the direct-launch route.
+        window.setTimeout(exitDirectLaunch, 0);
       };
 
       if (shouldQuitDirectHostApp && window.api && typeof window.api.quitApp === 'function') {
@@ -408,33 +393,60 @@ function handleMessage(msg) {
     }
 
   } else if (msg === 'Connection Established') {
-    // The direct-launch status must not cover the video while the first frame is arriving.
-    if (window._directSmartHubLaunch) {
-      var directStatusOnConnect = document.getElementById('directSmartHubStatus');
-      if (directStatusOnConnect) directStatusOnConnect.style.display = 'none';
-    }
-    // Prepare the screen for video stream
+    // Prepare the video surface. The direct route keeps the native splash above it
+    // until displayVideo confirms the first frame is ready.
     $('#loadingSpinner').css('display', 'none');
     $('body').css('backgroundColor', 'transparent');
-    $('#wasm_module').css('display', '');
-    $('#wasm_module').focus();
+    if (window._directSmartHubLaunch) {
+      var directVideo = document.getElementById('wasm_module');
+      if (directVideo) {
+        directVideo.style.display = 'block';
+        directVideo.focus();
+      }
+    } else {
+      $('#wasm_module').css('display', '');
+      $('#wasm_module').focus();
+    }
   } else if (msg.indexOf('ProgressMsg: ') === 0) {
     // Show progress message under loading spinner
     $('#loadingSpinnerMessage').text(translateBackendMessage(msg.replace('ProgressMsg: ', '')));
   } else if (msg.indexOf('TransientMsg: ') === 0) {
-    // Show transient message as notification
-    snackbarLogLong(translateBackendMessage(msg.replace('TransientMsg: ', '')));
-  } else if (msg.indexOf('DialogMsg: ') === 0) {
-    // Show dialog message using the warning dialog
-    warningDialog(t('Connection Error'), translateBackendMessage(msg.replace('DialogMsg: ', '')));
-  } else if (msg === 'displayVideo') {
-    // Hide the lightweight direct-launch status once the stream video is ready.
+    // Notifications are intentionally omitted when running headlessly from Smart Hub.
+    var transientText = translateBackendMessage(msg.replace('TransientMsg: ', ''));
     if (window._directSmartHubLaunch) {
-      // Use direct DOM access for compatibility with older Tizen WebKit engines.
-      var directStatusElement = document.getElementById('directSmartHubStatus');
-      if (directStatusElement) directStatusElement.style.display = 'none';
+      console.info('%c[messages.js, handleMessage]', 'color: gray;', transientText);
+    } else {
+      snackbarLogLong(transientText);
     }
-    // Show the video stream now
+  } else if (msg.indexOf('DialogMsg: ') === 0) {
+    var dialogText = translateBackendMessage(msg.replace('DialogMsg: ', ''));
+    if (window._directSmartHubLaunch) {
+      directSmartHubLaunchFailure(t('Connection Error') + ': ' + dialogText);
+    } else {
+      warningDialog(t('Connection Error'), dialogText);
+    }
+  } else if (msg === 'displayVideo') {
+    if (window._directSmartHubLaunch) {
+      // Only expose the stream after the first video frame is ready; this keeps the
+      // native launch splash covering all initialization and avoids a blank UI frame.
+      var directVideo = document.getElementById('wasm_module');
+      if (directVideo) {
+        directVideo.style.display = 'block';
+        directVideo.style.visibility = 'visible';
+      }
+      var releaseDirectSplash = function() {
+        if (typeof window.hideNativeLaunchScreen === 'function') {
+          window.hideNativeLaunchScreen();
+        } else if (window.screen && typeof window.screen.show === 'function') {
+          window.screen.show();
+        }
+      };
+      if (typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(releaseDirectSplash);
+      } else {
+        window.setTimeout(releaseDirectSplash, 0);
+      }
+    }
     $('#listener').addClass('fullscreen');
   } else if (msg.indexOf('NoWarningMsg: ') === 0) {
     // Hide the connection warnings overlay
@@ -474,10 +486,8 @@ function handleMessage(msg) {
       console.warn('%c[messages.js, handleMessage]', 'color: gray;', 'Warning: Gamepad ' + gamepadIdx + ' does not support the rumble feature!');
     }
   } else if (msg.indexOf('mouseEmulationOn') === 0) {
-    // Show mouse emulation enable status as a notification
-    snackbarLogLong('Mouse emulation is activated');
+    if (!window._directSmartHubLaunch) snackbarLogLong('Mouse emulation is activated');
   } else if (msg.indexOf('mouseEmulationOff') === 0) {
-    // Show mouse emulation disable status as notification
-    snackbarLogLong('Mouse emulation is deactivated');
+    if (!window._directSmartHubLaunch) snackbarLogLong('Mouse emulation is deactivated');
   }
 }
