@@ -37,7 +37,13 @@ var isStartupHttpReady = false;
 var isStartupHostsLoaded = false;
 var startupHostsSnackbarVisible = false;
 var isStartupLocaleReady = false;
+var isStartupWindowLoaded = false;
 var isStartupUiRestored = false;
+var isNativeLaunchScreenReleaseStarted = false;
+var isNativeLaunchScreenFrameDrawn = false;
+var isNativeLaunchScreenReleaseScheduled = false;
+var isNativeLaunchScreenReleased = false;
+var nativeLaunchScreenReleaseTimeout = null;
 var isSubnetScanFinished = false; // Indicates if the initial subnet scan has completed
 var activePolls = {}; // Hosts currently being polled. An associated array of polling IDs, keyed by server UID
 var pairingCert; // Loads the generated certificate
@@ -332,56 +338,93 @@ function changeUiModeForWasmLoad() {
   $('#wasmSpinnerMessage, #loadingSpinnerMessage').empty();
 }
 
-function releaseNativeLaunchScreen() {
-  var released = false;
-  var watchdog = null;
-  var release = function() {
-    if (released) return;
-    released = true;
-    if (watchdog !== null) window.clearTimeout(watchdog);
+function hideNativeLaunchScreen() {
+  if (isNativeLaunchScreenReleased) return;
+  isNativeLaunchScreenReleased = true;
+  if (nativeLaunchScreenReleaseTimeout !== null) {
+    window.clearTimeout(nativeLaunchScreenReleaseTimeout);
+    nativeLaunchScreenReleaseTimeout = null;
+  }
 
-    try {
-      if (window.screen && typeof window.screen.show === 'function') {
-        window.screen.show();
-      }
-    } catch (error) {
-      console.warn('%c[index.js, releaseNativeLaunchScreen]', 'color: gray;', 'Could not release the native TV splash screen:', error);
+  try {
+    if (window.screen && typeof window.screen.show === 'function') {
+      window.screen.show();
     }
-  };
-
-  // Let the browser reach a first UI frame, then release on the following frame
-  // so the interface has had a rendering opportunity underneath the native splash.
-  // The 300 ms watchdog is only a safety net if that following frame never arrives.
-  if (typeof window.requestAnimationFrame === 'function') {
-    window.requestAnimationFrame(function() {
-      watchdog = window.setTimeout(release, 300);
-      window.requestAnimationFrame(release);
-    });
-  } else {
-    // Tizen supports requestAnimationFrame; this is only a legacy fallback.
-    window.setTimeout(release, 0);
+  } catch (error) {
+    console.warn('%c[index.js, hideNativeLaunchScreen]', 'color: gray;', 'Could not release the native TV splash screen:', error);
   }
 }
 
-function maybeRestoreUiAfterStartup() {
-  // A direct app-tile launch must never restore or navigate through the home UI.
-  if (_directSmartHubLaunch) return;
-
-  // The initial localized interface does not depend on HTTP/WASM initialization or
-  // the configured host list; both continue loading independently in the background.
-  if (!isStartupLocaleReady || isStartupUiRestored) {
+function maybeReleaseNativeLaunchScreen() {
+  // This handoff is only for the complete, normal application launch.
+  if (_directSmartHubLaunch || !isStartupLocaleReady || !isStartupWindowLoaded ||
+      !isStartupUiRestored || isNativeLaunchScreenReleased) {
     return;
   }
 
-  isStartupUiRestored = true;
-  restoreUiAfterWasmLoad();
+  // Static resources and WebUI scripts are ready. Let the restored layout pass
+  // through a browser rendering opportunity before removing the native splash.
+  if (!isNativeLaunchScreenReleaseStarted) {
+    isNativeLaunchScreenReleaseStarted = true;
+    if (typeof window.requestAnimationFrame !== 'function') {
+      window.setTimeout(hideNativeLaunchScreen, 0);
+      return;
+    }
 
-  // Put the loading notice into the UI before its first frame when host restoration
-  // is still in progress. The persisted hosts/network work can then finish underneath it.
-  if (!isStartupHostsLoaded) showStartupHostsSnackbar();
+    window.requestAnimationFrame(function() {
+      var layout = document.querySelector('.mdl-layout');
+      if (layout) void layout.getBoundingClientRect();
 
-  // Hide the native splash only after the browser has had a chance to draw the UI.
-  releaseNativeLaunchScreen();
+      window.requestAnimationFrame(function() {
+        isNativeLaunchScreenFrameDrawn = true;
+        // A local visual preference must never leave the splash stuck. This
+        // watchdog starts only after the initial UI has had a rendering chance.
+        nativeLaunchScreenReleaseTimeout = window.setTimeout(hideNativeLaunchScreen, 300);
+
+        if (configSummaryPreferenceLoaded) {
+          // The status bar's state is already applied; allow any change made
+          // during the preceding frame to reach the screen before switching.
+          isNativeLaunchScreenReleaseScheduled = true;
+          window.requestAnimationFrame(hideNativeLaunchScreen);
+        } else {
+          maybeReleaseNativeLaunchScreenAfterVisualUpdate();
+        }
+      });
+    });
+    return;
+  }
+
+  maybeReleaseNativeLaunchScreenAfterVisualUpdate();
+}
+
+function maybeReleaseNativeLaunchScreenAfterVisualUpdate() {
+  if (!isNativeLaunchScreenFrameDrawn || !configSummaryPreferenceLoaded ||
+      isNativeLaunchScreenReleaseScheduled || isNativeLaunchScreenReleased) {
+    return;
+  }
+
+  // The summary bar may be created or removed by its asynchronous preference
+  // read. Give that DOM update a rendered frame before switching away.
+  isNativeLaunchScreenReleaseScheduled = true;
+  window.requestAnimationFrame(function() {
+    window.requestAnimationFrame(hideNativeLaunchScreen);
+  });
+}
+
+function maybeRestoreUiAfterStartup() {
+  // Direct Smart Hub app tiles bypass the normal WebUI startup path.
+  if (_directSmartHubLaunch || !isStartupLocaleReady) return;
+
+  // Present the localized interface immediately. Host restoration, connectivity
+  // checks, and remaining user-data reads continue in the background.
+  if (!isStartupUiRestored) {
+    isStartupUiRestored = true;
+    restoreUiAfterWasmLoad();
+    if (!isStartupHostsLoaded) showStartupHostsSnackbar();
+  }
+
+  // Do not wait for HTTP initialization, host discovery, or network responses.
+  maybeReleaseNativeLaunchScreen();
 }
 
 function moduleDidLoad() {
@@ -701,11 +744,12 @@ function restoreUiAfterWasmLoad() {
   $('#wasmSpinner').hide();
   $('#loadingSpinner').css('display', 'none');
 
-  // Navigate to the Hosts view
+  // Navigate to the Hosts view and establish the complete initial focus state before paint.
   Navigation.push(Views.Hosts);
   showHostsMode(true);
-  // Set focus to current item and/or scroll to the current host row
-  setTimeout(() => Navigation.switch(), 100);
+  Navigation.switch();
+  Navigation.switch();
+  updateConfigSummaryBar();
 
   // Find mDNS host discovered using ServiceFinder (network service discovery)
   // findNvService(function(finder, opt_error) {
@@ -4602,7 +4646,11 @@ function loadUserDataCb() {
       document.querySelector('#showConfigSummaryBtn').MaterialSwitch.off();
     }
     configSummaryPreferenceLoaded = true;
-    updateConfigSummaryBar();
+    if (!_directSmartHubLaunch) {
+      updateConfigSummaryBar();
+      maybeRestoreUiAfterStartup();
+      maybeReleaseNativeLaunchScreenAfterVisualUpdate();
+    }
   });
 
   console.log('%c[index.js, loadUserDataCb]', 'color: green;', 'Load stored sortAppsList preferences.');
@@ -5583,7 +5631,6 @@ function initializeConfigSummaryBar() {
 
 function onWindowLoad() {
   console.log('%c[index.js, onWindowLoad]', 'color: green;', 'Moonlight\'s main window loaded.');
-  initializeConfigSummaryBar();
   initSamsungKeys();
   initSpecialKeys();
   loadUserData();
@@ -5597,6 +5644,14 @@ function onWindowLoad() {
     }
     return;
   }
+
+  // Complete normal UI component setup before the native splash can be released.
+  if (window.componentHandler && typeof window.componentHandler.upgradeDom === 'function') {
+    window.componentHandler.upgradeDom();
+  }
+  initializeConfigSummaryBar();
+  isStartupWindowLoaded = true;
+  maybeRestoreUiAfterStartup();
 
   // Keep the standard Moonlight icon launch path unchanged.
   probeSmartHubSupport().then(function() {
