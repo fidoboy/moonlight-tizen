@@ -1,5 +1,4 @@
-// Tizen's native splash remains visible until releaseNativeLaunchScreen()
-// is called. Do not impose an arbitrary delay after the web UI is ready.
+// Tizen's native splash overlays the normal WebUI until hideNativeLaunchScreen() is called.
 
 // Initialize global variables and constants
 var appInfo = tizen.application.getAppInfo(); // Retrieve the application information
@@ -40,8 +39,6 @@ var isStartupLocaleReady = false;
 var isStartupWindowLoaded = false;
 var isStartupUiRestored = false;
 var isNativeLaunchScreenReleaseStarted = false;
-var isNativeLaunchScreenFrameDrawn = false;
-var isNativeLaunchScreenReleaseScheduled = false;
 var isNativeLaunchScreenReleased = false;
 var nativeLaunchScreenReleaseTimeout = null;
 var isSubnetScanFinished = false; // Indicates if the initial subnet scan has completed
@@ -329,11 +326,16 @@ function attachListeners() {
 }
 
 function changeUiModeForWasmLoad() {
-  // Startup is covered by Tizen's native launch screen. Do not show the old
-  // full-screen in-app spinner at this stage.
-  $('#main-header').hide();
-  $('#main-header').children().hide();
-  $('#main-content').children().hide();
+  // Tizen's native splash covers the normal WebUI. Keep the full UI visible
+  // and laying out from the start; hide it only for direct Smart Hub launches.
+  if (_directSmartHubLaunch) {
+    document.documentElement.classList.add('app-starting');
+    $('#main-header').hide();
+    $('#main-header').children().hide();
+    $('#main-content').children().hide();
+  }
+
+  // Startup progress is shown in a snackbar, not a full-screen spinner.
   $('#wasmSpinner, #loadingSpinner').hide();
   $('#wasmSpinnerMessage, #loadingSpinnerMessage').empty();
 }
@@ -356,59 +358,30 @@ function hideNativeLaunchScreen() {
 }
 
 function maybeReleaseNativeLaunchScreen() {
-  // This handoff is only for the complete, normal application launch.
+  // Only the complete, normal launch uses this handoff.
   if (_directSmartHubLaunch || !isStartupLocaleReady || !isStartupWindowLoaded ||
-      !isStartupUiRestored || isNativeLaunchScreenReleased) {
+      !isStartupUiRestored || !configSummaryPreferenceLoaded ||
+      isNativeLaunchScreenReleaseStarted || isNativeLaunchScreenReleased) {
     return;
   }
 
-  // Static resources and WebUI scripts are ready. Let the restored layout pass
-  // through a browser rendering opportunity before removing the native splash.
-  if (!isNativeLaunchScreenReleaseStarted) {
-    isNativeLaunchScreenReleaseStarted = true;
-    if (typeof window.requestAnimationFrame !== 'function') {
-      window.setTimeout(hideNativeLaunchScreen, 0);
-      return;
-    }
+  isNativeLaunchScreenReleaseStarted = true;
 
+  // The WebUI is already visible underneath the native splash, localized and
+  // prepared. Let the browser paint one frame before removing the native layer.
+  if (typeof window.requestAnimationFrame === 'function') {
     window.requestAnimationFrame(function() {
       var layout = document.querySelector('.mdl-layout');
       if (layout) void layout.getBoundingClientRect();
 
-      window.requestAnimationFrame(function() {
-        isNativeLaunchScreenFrameDrawn = true;
-        // A local visual preference must never leave the splash stuck. This
-        // watchdog starts only after the initial UI has had a rendering chance.
-        nativeLaunchScreenReleaseTimeout = window.setTimeout(hideNativeLaunchScreen, 300);
-
-        if (configSummaryPreferenceLoaded) {
-          // The status bar's state is already applied; allow any change made
-          // during the preceding frame to reach the screen before switching.
-          isNativeLaunchScreenReleaseScheduled = true;
-          window.requestAnimationFrame(hideNativeLaunchScreen);
-        } else {
-          maybeReleaseNativeLaunchScreenAfterVisualUpdate();
-        }
-      });
+      // Safety only: if the next animation frame stalls, release within 300 ms
+      // of this first rendering opportunity. Normally the next frame releases it.
+      nativeLaunchScreenReleaseTimeout = window.setTimeout(hideNativeLaunchScreen, 300);
+      window.requestAnimationFrame(hideNativeLaunchScreen);
     });
-    return;
+  } else {
+    window.setTimeout(hideNativeLaunchScreen, 0);
   }
-
-  maybeReleaseNativeLaunchScreenAfterVisualUpdate();
-}
-
-function maybeReleaseNativeLaunchScreenAfterVisualUpdate() {
-  if (!isNativeLaunchScreenFrameDrawn || !configSummaryPreferenceLoaded ||
-      isNativeLaunchScreenReleaseScheduled || isNativeLaunchScreenReleased) {
-    return;
-  }
-
-  // The summary bar may be created or removed by its asynchronous preference
-  // read. Give that DOM update a rendered frame before switching away.
-  isNativeLaunchScreenReleaseScheduled = true;
-  window.requestAnimationFrame(function() {
-    window.requestAnimationFrame(hideNativeLaunchScreen);
-  });
 }
 
 function maybeRestoreUiAfterStartup() {
@@ -4649,7 +4622,6 @@ function loadUserDataCb() {
     if (!_directSmartHubLaunch) {
       updateConfigSummaryBar();
       maybeRestoreUiAfterStartup();
-      maybeReleaseNativeLaunchScreenAfterVisualUpdate();
     }
   });
 
