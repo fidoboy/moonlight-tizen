@@ -167,14 +167,8 @@ function initializeDisabledSwitchAppearance() {
 
 // Called by the common.js module
 function attachListeners() {
-  // The direct route supplies only the runtime elements needed by the stream.
-  // Do not initialize the home UI, localization, settings listeners, or discovery.
-  if (_directSmartHubLaunch) {
-    if (typeof Controller !== 'undefined' && typeof Controller.startWatching === 'function') {
-      Controller.startWatching();
-    }
-    return;
-  }
+  // Direct streaming has no UI navigation observer to initialize.
+  if (_directSmartHubLaunch) return;
 
   initializeDisabledSwitchAppearance();
   changeUiModeForWasmLoad();
@@ -3069,8 +3063,10 @@ function startGame(host, appID) {
     startAudioScheduler();
   }
 
-  // Refresh the server info, because the user might have quit the game
-  host.refreshServerInfo().then(function(ret) {
+  // The direct route has just polled this host and initialized its base URLs.
+  // Avoid a redundant serverinfo request before launching the selected app.
+  var refreshBeforeStart = _directSmartHubLaunch ? Promise.resolve() : host.refreshServerInfo();
+  refreshBeforeStart.then(function(ret) {
     (_directSmartHubLaunch ? Promise.resolve({ id: appID, title: String(appID) }) : host.getAppById(appID)).then(function(appToStart) {
       if (!_directSmartHubLaunch && host.currentGame != 0 && host.currentGame != appID) {
         host.getAppById(host.currentGame).then(function(currentApp) {
@@ -5043,7 +5039,11 @@ function loadHTTPCertsCb() {
           hosts = {};
           hosts[targetUID] = directHost;
           _directSmartHubHost = directHost;
-          // Use only the host identified by the Smart Hub payload.
+          // Poll only the selected host once; avoid the general polling path's
+          // MAC update and app-list fetch side effects.
+          directHost._pollCount = 2;
+          directHost._pollCompletionCallbacks = [];
+          directHost._consecutivePollFailures = 0;
           _directSmartHubHostReady = true;
           isHostsLoaded = true;
           maybeStartDirectSmartHubLaunch();
@@ -5786,6 +5786,7 @@ window.onload = onWindowLoad;
 
 // Gamepad connected events
 window.addEventListener('gamepadconnected', function(e) {
+  if (_directSmartHubLaunch) return;
   const connectedGamepad = e.gamepad;
   const gamepadIndex = connectedGamepad.index;
   const rumbleFeedbackSwitch = document.getElementById('rumbleFeedbackSwitch');
@@ -5810,6 +5811,7 @@ window.addEventListener('gamepadconnected', function(e) {
 
 // Gamepad disconnected events
 window.addEventListener('gamepaddisconnected', function(e) {
+  if (_directSmartHubLaunch) return;
   const disconnectedGamepad = e.gamepad;
   const gamepadIndex = disconnectedGamepad.index;
   console.log('%c[index.js, gamepaddisconnected]', 'color: green;', 'Gamepad disconnected:\n' + JSON.stringify(disconnectedGamepad), disconnectedGamepad);

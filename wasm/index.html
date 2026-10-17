@@ -57,7 +57,6 @@
       scriptTag('static/js/jquery-2.2.0.min.js'),
       inlineScriptTag("window.t=function(message){var args=Array.prototype.slice.call(arguments,1);return String(message).replace(/%([0-9]+)[$]s/g,function(token,index){var value=args[Number(index)-1];return value==null?token:String(value);});};"),
       scriptTag('platform/messages.js'),
-      scriptTag('platform/gamepad.js'),
       scriptTag('platform/audio.js'),
       scriptTag('platform/index.js'),
       scriptTag('static/js/utils.js'),
