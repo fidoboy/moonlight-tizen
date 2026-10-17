@@ -2,8 +2,9 @@
 """Render Moonlight's native Samsung TV splash: animation plus static hold.
 
 Eight sectors fade in sequentially. The logo then makes a clear, controlled
-bounce while the gray disc and app name fade in; the final frame is held for
-five additional seconds so the completed logo remains readable on the TV.
+bounce while the gray disc and app name fade in. The starfield continues to
+decelerate for one second after the logo settles; total video duration remains
+unchanged, with the static hold shortened to compensate.
 """
 import argparse
 import math
@@ -20,9 +21,11 @@ SECTOR_INTERVAL_FRAMES = 9  # 300 ms at 30 fps
 SECTOR_FADE_FRAMES = 9      # 300 ms fade-in for each sector
 SECTOR_PHASE_FRAMES = 8 * SECTOR_INTERVAL_FRAMES
 SETTLE_FRAMES = 36          # 1.2 s for the bounce and accompanying fade
-ANIMATED_FRAME_COUNT = SECTOR_PHASE_FRAMES + SETTLE_FRAMES
-STATIC_HOLD_FRAMES = 5 * FPS
-TOTAL_FRAMES = ANIMATED_FRAME_COUNT + STATIC_HOLD_FRAMES
+LOGO_ANIMATION_FRAME_COUNT = SECTOR_PHASE_FRAMES + SETTLE_FRAMES
+STAR_DECELERATION_AFTER_LOGO_FRAMES = FPS  # Continue for 1 s after the logo settles.
+ANIMATED_FRAME_COUNT = LOGO_ANIMATION_FRAME_COUNT + STAR_DECELERATION_AFTER_LOGO_FRAMES
+TOTAL_FRAMES = LOGO_ANIMATION_FRAME_COUNT + 5 * FPS  # Preserve the original total duration.
+STATIC_HOLD_FRAMES = TOTAL_FRAMES - ANIMATED_FRAME_COUNT
 
 FINAL_LOGO_SCALE = 0.78
 OVERSIZED_LOGO_SCALE = FINAL_LOGO_SCALE * 1.15
@@ -363,7 +366,8 @@ def main():
         f"Generated {ANIMATED_FRAME_COUNT} animated frames plus "
         f"{STATIC_HOLD_FRAMES} static frames: {TOTAL_FRAMES} frames total at "
         f"{output_width}x{output_height} at {FPS} fps "
-        f"({ANIMATED_FRAME_COUNT / FPS:.1f} s animation + "
+        f"({LOGO_ANIMATION_FRAME_COUNT / FPS:.1f} s logo animation + "
+        f"{STAR_DECELERATION_AFTER_LOGO_FRAMES / FPS:.1f} s continued starfield deceleration + "
         f"{STATIC_HOLD_FRAMES / FPS:.1f} s static hold = {TOTAL_FRAMES / FPS:.1f} s)."
     )
 
