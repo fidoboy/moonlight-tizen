@@ -38,6 +38,9 @@ var startupHostsSnackbarVisible = false;
 var isStartupLocaleReady = false;
 var isStartupWindowLoaded = false;
 var isStartupUiRestored = false;
+var isDeferredStartupScheduled = false;
+var isDeferredStartupStarted = false;
+var deferredStartupTimeout = null;
 var isNativeLaunchScreenReleaseStarted = false;
 var isNativeLaunchScreenReleased = false;
 var nativeLaunchScreenReleaseTimeout = null;
@@ -93,7 +96,7 @@ var _previewApps = {}; // Per-host app cache for Smart Hub Preview: {serverUid: 
 var _isSmartHubSupported = false; // Flag indicating if Smart Hub Preview is supported on this device
 
 // Experimental direct launch state for Smart Hub app tiles.
-var _directSmartHubLaunch = null;
+var _directSmartHubLaunch = window._directSmartHubLaunch || null;
 var _directSmartHubHost = null;
 var _directSmartHubHostReady = false;
 var _directSmartHubSettingsReady = false;
@@ -358,45 +361,82 @@ function hideNativeLaunchScreen() {
 }
 
 function maybeReleaseNativeLaunchScreen() {
-  // Only the complete, normal launch uses this handoff.
-  if (_directSmartHubLaunch || !isStartupLocaleReady || !isStartupWindowLoaded ||
-      !isStartupUiRestored || !configSummaryPreferenceLoaded ||
+  // For a normal launch, locales are the only prerequisite for revealing the UI.
+  // Direct Smart Hub launches keep the pre-hidden UI and their existing startup path.
+  if (_directSmartHubLaunch || !isStartupLocaleReady ||
       isNativeLaunchScreenReleaseStarted || isNativeLaunchScreenReleased) {
     return;
   }
 
   isNativeLaunchScreenReleaseStarted = true;
 
-  // The WebUI is already visible underneath the native splash, localized and
-  // prepared. Let the browser paint one frame before removing the native layer.
-  if (typeof window.requestAnimationFrame === 'function') {
-    window.requestAnimationFrame(function() {
-      var layout = document.querySelector('.mdl-layout');
-      if (layout) void layout.getBoundingClientRect();
+  // These operations only prepare the first visible host screen; restoration remains deferred.
+  var headerTitle = document.getElementById('header-title');
+  if (headerTitle) headerTitle.textContent = t('Hosts');
+  $('#goBackBtn, #restoreDefaultsBtn, #quitRunningAppBtn').hide();
+  $('#settingsBtn, #supportBtn, #updateAppBtn').show();
+  $('#settings-list, #game-grid, #wasmSpinner, #loadingSpinner').hide();
 
-      // Safety only: if the next animation frame stalls, release within 300 ms
-      // of this first rendering opportunity. Normally the next frame releases it.
-      nativeLaunchScreenReleaseTimeout = window.setTimeout(hideNativeLaunchScreen, 300);
-      window.requestAnimationFrame(hideNativeLaunchScreen);
-    });
+  document.documentElement.classList.remove('app-starting');
+
+  // Give the browser a rendering opportunity before releasing Tizen's native splash.
+  var releaseSplashAndScheduleRestore = function() {
+    var layout = document.querySelector('.mdl-layout');
+    if (layout) void layout.getBoundingClientRect();
+
+    hideNativeLaunchScreen();
+    scheduleDeferredNormalStartup();
+  };
+
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(releaseSplashAndScheduleRestore);
   } else {
-    window.setTimeout(hideNativeLaunchScreen, 0);
+    window.setTimeout(releaseSplashAndScheduleRestore, 0);
   }
 }
 
-function maybeRestoreUiAfterStartup() {
-  // Direct Smart Hub app tiles bypass the normal WebUI startup path.
-  if (_directSmartHubLaunch || !isStartupLocaleReady) return;
+function scheduleDeferredNormalStartup() {
+  if (_directSmartHubLaunch || isDeferredStartupScheduled || isDeferredStartupStarted) return;
 
-  // Present the localized interface immediately. Host restoration, connectivity
-  // checks, and remaining user-data reads continue in the background.
+  isDeferredStartupScheduled = true;
+  deferredStartupTimeout = window.setTimeout(startDeferredNormalStartup, 500);
+}
+
+function startDeferredNormalStartup() {
+  if (_directSmartHubLaunch || isDeferredStartupStarted) return;
+
+  isDeferredStartupStarted = true;
+  deferredStartupTimeout = null;
+
+  // Start the remaining work only after the UI is visible and Tizen's splash is released.
+  if (window.componentHandler && typeof window.componentHandler.upgradeDom === 'function') {
+    window.componentHandler.upgradeDom();
+  }
+  loadUserData();
+  initializeConfigSummaryBar();
+
   if (!isStartupUiRestored) {
     isStartupUiRestored = true;
     restoreUiAfterWasmLoad();
     if (!isStartupHostsLoaded) showStartupHostsSnackbar();
   }
 
-  // Do not wait for HTTP initialization, host discovery, or network responses.
+  // WebAssembly compilation and host/network initialization are deliberately deferred.
+  if (typeof window.startNormalStartupWasm === 'function') {
+    window.startNormalStartupWasm();
+  } else {
+    console.error('%c[index.js, startDeferredNormalStartup]', 'color: red;', 'Deferred WebAssembly startup hook is unavailable.');
+  }
+
+  probeSmartHubSupport().then(function() {
+    handleDeepLink();
+    window.addEventListener('appcontrol', handleDeepLink);
+  });
+}
+
+function maybeRestoreUiAfterStartup() {
+  // Repeated calls from HTTP/host callbacks are harmless: index.html made the route decision once.
+  if (_directSmartHubLaunch || !isStartupLocaleReady) return;
   maybeReleaseNativeLaunchScreen();
 }
 
@@ -5300,31 +5340,8 @@ function updatePreviewData() {
   }
 }
 
-function getSmartHubLaunchPayload() {
-  try {
-    var requested = tizen.application.getCurrentApplication().getRequestedAppControl();
-    var data = requested && requested.appControl && requested.appControl.data;
-    if (!data || !Array.isArray(data)) return null;
-    for (var i = 0; i < data.length; i++) {
-      if (data[i].key !== 'PAYLOAD' || !data[i].value || !data[i].value.length) continue;
-      var payload = JSON.parse(data[i].value[0]);
-      var actionData = JSON.parse(payload.values);
-      if (actionData && actionData.serverUid && actionData.appId !== null && actionData.appId !== undefined) {
-        return {
-          serverUid: String(actionData.serverUid),
-          appId: actionData.appId,
-          appName: actionData.appName || actionData.appTitle || actionData.title || actionData.name || null
-        };
-      }
-    }
-  } catch (error) {
-    console.warn('%c[index.js, getSmartHubLaunchPayload]', 'color: gray;', 'Could not read Smart Hub launch payload:', error);
-  }
-  return null;
-}
+// The Smart Hub payload was parsed exactly once by the early script in index.html.
 
-// Capture before WebAssembly can begin host initialization.
-_directSmartHubLaunch = getSmartHubLaunchPayload();
 
 function setDirectSmartHubStatus(message) {
   if (!_directSmartHubLaunch) return;
@@ -5605,9 +5622,10 @@ function onWindowLoad() {
   console.log('%c[index.js, onWindowLoad]', 'color: green;', 'Moonlight\'s main window loaded.');
   initSamsungKeys();
   initSpecialKeys();
-  loadUserData();
 
   if (_directSmartHubLaunch) {
+    // Preserve the existing direct-launch path: it has no deferred-startup delay.
+    loadUserData();
     console.log('%c[index.js, onWindowLoad]', 'color: green;', 'Direct Smart Hub app launch detected: ' + JSON.stringify(_directSmartHubLaunch));
     try {
       if (window.screen && typeof window.screen.show === 'function') window.screen.show();
@@ -5617,19 +5635,11 @@ function onWindowLoad() {
     return;
   }
 
-  // Complete normal UI component setup before the native splash can be released.
-  if (window.componentHandler && typeof window.componentHandler.upgradeDom === 'function') {
-    window.componentHandler.upgradeDom();
-  }
-  initializeConfigSummaryBar();
   isStartupWindowLoaded = true;
   maybeRestoreUiAfterStartup();
 
-  // Keep the standard Moonlight icon launch path unchanged.
-  probeSmartHubSupport().then(function() {
-    handleDeepLink();
-    window.addEventListener('appcontrol', handleDeepLink);
-  });
+  // Normal startup restoration, including WebAssembly and stored-data loading,
+  // starts 500 ms after the localized UI is revealed and the native splash is released.
 }
 
 window.onload = onWindowLoad;

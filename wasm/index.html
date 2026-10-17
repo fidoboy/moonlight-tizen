@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" class="app-starting">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="-1">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script type="text/javascript">
-  // Hide the home UI before the first paint only when Smart Hub launches a specific app.
-  // Keep this check synchronous and ahead of stylesheet loading to prevent a UI flash.
+  // Decide the launch route once, before the page can paint.
+  // The static app-starting class keeps the UI hidden until normal-launch locales are ready.
   (function() {
     try {
       var currentApp = tizen.application.getCurrentApplication();
@@ -21,7 +21,11 @@
         var actionData = JSON.parse(payload.values);
         if (actionData && actionData.serverUid &&
             actionData.appId !== null && actionData.appId !== undefined) {
-          document.documentElement.classList.add('app-starting');
+          window._directSmartHubLaunch = {
+            serverUid: String(actionData.serverUid),
+            appId: actionData.appId,
+            appName: actionData.appName || actionData.appTitle || actionData.title || actionData.name || null
+          };
           return;
         }
       }
