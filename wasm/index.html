@@ -20,19 +20,6 @@
     html.app-starting .mdl-layout {
       visibility: hidden !important;
     }
-    /* Match the native launch artwork across the native-to-WebView handoff. */
-    #startupSplashFallback {
-      position: fixed;
-      inset: 0;
-      z-index: 2147483646;
-      background: #000 url("static/res/launch-screen.png") center center / contain no-repeat;
-      opacity: 1;
-      pointer-events: none;
-      transition: opacity 300ms ease-out;
-    }
-    #startupSplashFallback.is-fading {
-      opacity: 0;
-    }
     /* Lightweight status surface used only by the experimental direct Smart Hub launch. */
     #directSmartHubStatus {
       position: fixed;

@@ -347,28 +347,6 @@ function releaseNativeLaunchScreen(onReleased) {
       console.warn('%c[index.js, releaseNativeLaunchScreen]', 'color: gray;', 'Could not release the native TV splash screen:', error);
     }
 
-    // Keep the matching HTML launch image over the web UI during the native-to-web
-    // handoff, then reveal the already-prepared interface with a short fade.
-    var fallback = document.getElementById('startupSplashFallback');
-    if (fallback) {
-      var fadeFallback = function() {
-        window.setTimeout(function() {
-          fallback.classList.add('is-fading');
-          window.setTimeout(function() {
-            if (fallback.parentNode) fallback.parentNode.removeChild(fallback);
-          }, 350);
-        }, 100);
-      };
-
-      if (typeof window.requestAnimationFrame === 'function') {
-        window.requestAnimationFrame(function() {
-          window.requestAnimationFrame(fadeFallback);
-        });
-      } else {
-        fadeFallback();
-      }
-    }
-
     if (typeof onReleased === 'function') {
       onReleased();
     }
@@ -722,17 +700,7 @@ function showHosts() {
 }
 
 function restoreUiAfterWasmLoad() {
-  // Render the same static artwork as the native launch screen before exposing the
-  // web UI, so a native-to-web handoff cannot reveal a black frame if the WebView
-  // becomes visible a little before its first complete UI composition.
-  if (!document.getElementById('startupSplashFallback')) {
-    var fallback = document.createElement('div');
-    fallback.id = 'startupSplashFallback';
-    fallback.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(fallback);
-  }
-
-  // Release the first-render guard only after HTTP setup and localization are ready.
+  // Release the first-render guard only after HTTP setup, localization, and the stored host list are ready.
   document.documentElement.classList.remove('app-starting');
 
   // Stop navigation before showing the loading screen
