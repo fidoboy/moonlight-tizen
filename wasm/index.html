@@ -5,6 +5,31 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="-1">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="text/javascript">
+  // Hide the home UI before the first paint only when Smart Hub launches a specific app.
+  // Keep this check synchronous and ahead of stylesheet loading to prevent a UI flash.
+  (function() {
+    try {
+      var currentApp = tizen.application.getCurrentApplication();
+      var requested = currentApp && currentApp.getRequestedAppControl();
+      var data = requested && requested.appControl && requested.appControl.data;
+      if (!data || !Array.isArray(data)) return;
+
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].key !== 'PAYLOAD' || !data[i].value || !data[i].value.length) continue;
+        var payload = JSON.parse(data[i].value[0]);
+        var actionData = JSON.parse(payload.values);
+        if (actionData && actionData.serverUid &&
+            actionData.appId !== null && actionData.appId !== undefined) {
+          document.documentElement.classList.add('app-starting');
+          return;
+        }
+      }
+    } catch (error) {
+      console.warn('[index.html] Could not inspect Smart Hub launch data early:', error);
+    }
+  })();
+  </script>
   <title data-i18n="Moonlight Game Streaming">Moonlight Game Streaming</title>
   <link rel="icon" href="static/favicon/favicon.png">
   <link rel="stylesheet" href="static/css/roboto.css">
