@@ -1199,10 +1199,15 @@ body {
     flex: 0 0 auto;
     width: 16px;
     height: 16px;
+    margin-right: 4px;
     object-fit: contain;
     vertical-align: middle;
     user-select: none;
     -webkit-user-drag: none;
+}
+.config-summary-icon--dolby {
+    position: relative;
+    top: -3px;
 }
 .config-summary-label { color: #b9bdc8; }
 .config-summary-label::after { content: ":"; margin-right: 4px; }

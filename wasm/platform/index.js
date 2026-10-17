@@ -5479,10 +5479,10 @@ function createConfigSummaryBar() {
   var items = [
     { label: 'Resolution', id: 'summaryResolution', icon: 'static/res/ic_summary_resolution.svg' },
     { label: 'FPS', id: 'summaryFps', icon: 'static/res/ic_summary_fps.svg' },
-    { label: 'Bitrate', id: 'summaryBitrate' },
-    { label: 'Optimal bitrate', id: 'summaryOptimalBitrate', toggle: true },
-    { label: 'HDR', id: 'summaryHdr', toggle: true },
-    { label: 'Codec', id: 'summaryCodec' },
+    { label: 'Bitrate', id: 'summaryBitrate', icon: 'static/res/ic_summary_bitrate.svg' },
+    { label: 'Optimal bitrate', id: 'summaryOptimalBitrate', toggle: true, icon: 'static/res/ic_summary_optimal_bitrate.svg' },
+    { label: 'HDR', id: 'summaryHdr', toggle: true, icon: 'static/res/ic_summary_hdr.svg' },
+    { label: 'Codec', id: 'summaryCodec', icon: 'static/res/ic_summary_codec.svg' },
     { label: 'Dolby', id: 'summaryDolby', toggle: true, icon: 'static/res/ic_dolby_double_d.svg' },
     { label: 'Audio', id: 'summaryAudio', icon: 'static/res/ic_summary_audio.svg' },
     { label: 'Game mode summary', id: 'summaryGameMode', toggle: true, icon: 'static/res/ic_summary_gamepad.svg' }
@@ -5494,7 +5494,7 @@ function createConfigSummaryBar() {
 
     if (entry.icon) {
       var icon = document.createElement('img');
-      icon.className = 'config-summary-icon';
+      icon.className = 'config-summary-icon' + (entry.id === 'summaryDolby' ? ' config-summary-icon--dolby' : '');
       icon.src = entry.icon;
       icon.alt = '';
       icon.setAttribute('aria-hidden', 'true');
